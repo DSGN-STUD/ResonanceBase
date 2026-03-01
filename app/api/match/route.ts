@@ -1,6 +1,12 @@
-// Sanitize strings to remove non-ASCII characters that cause ByteString errors
-const sanitize = (str: unknown): string => 
-  typeof str === 'string' ? str.replace(/[^\x00-\x7F]/g, ' ').trim() : ''
+// Sanitize strings to remove ALL Unicode including line/paragraph separators
+const sanitize = (str: unknown): string => {
+  if (!str) return ''
+  return String(str)
+    .replace(/\u2028/g, ' ')
+    .replace(/\u2029/g, ' ')
+    .replace(/[^\u0000-\u00FF]/g, ' ')
+    .trim()
+}
 
 const sanitizeArray = (arr: unknown): string[] =>
   Array.isArray(arr) ? arr.map(item => sanitize(item)) : []
@@ -52,20 +58,27 @@ Searcher query: "${sanitizedQuery}"
 Candidates: ${JSON.stringify(sanitizedCandidates)}`
 
   try {
+    const requestBody = {
+      model: 'gpt-4o-mini',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userMessage }
+      ],
+      temperature: 0.7
+    }
+    
+    // Final sanitization pass on the entire JSON body
+    const cleanedBody = JSON.stringify(requestBody)
+      .replace(/\u2028/g, ' ')
+      .replace(/\u2029/g, ' ')
+    
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
       },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userMessage }
-        ],
-        temperature: 0.7
-      })
+      body: cleanedBody
     })
 
     if (!response.ok) {
