@@ -1,30 +1,18 @@
-// Sanitize strings to remove ALL Unicode including line/paragraph separators
-const sanitize = (str: unknown): string => {
-  if (!str) return ''
-  return String(str)
-    .replace(/\u2028/g, ' ')
-    .replace(/\u2029/g, ' ')
-    .replace(/[^\u0000-\u00FF]/g, ' ')
-    .trim()
+// Nuclear sanitize - catches everything by filtering char codes > 255
+const nuclearClean = (input: unknown): unknown => {
+  if (typeof input === 'string') {
+    return input.split('').filter(c => c.charCodeAt(0) <= 255).join('')
+  }
+  if (Array.isArray(input)) {
+    return input.map(nuclearClean)
+  }
+  if (typeof input === 'object' && input !== null) {
+    return Object.fromEntries(
+      Object.entries(input).map(([k, v]) => [k, nuclearClean(v)])
+    )
+  }
+  return input
 }
-
-const sanitizeArray = (arr: unknown): string[] =>
-  Array.isArray(arr) ? arr.map(item => sanitize(item)) : []
-
-const sanitizeProfile = (profile: Record<string, unknown>) => ({
-  id: profile.id,
-  full_name: sanitize(profile.full_name),
-  bio: sanitize(profile.bio),
-  skills: sanitizeArray(profile.skills),
-  interests: sanitizeArray(profile.interests),
-  ikigai_passion: sanitize(profile.ikigai_passion),
-  ikigai_mission: sanitize(profile.ikigai_mission),
-  ikigai_vocation: sanitize(profile.ikigai_vocation),
-  ikigai_profession: sanitize(profile.ikigai_profession),
-  intent: sanitizeArray(profile.intent),
-  availability: sanitize(profile.availability),
-  working_style: sanitize(profile.working_style),
-})
 
 export async function POST(req: Request) {
   const { query, myProfile, candidates } = await req.json()
@@ -33,9 +21,10 @@ export async function POST(req: Request) {
     return Response.json([])
   }
 
-  const sanitizedQuery = sanitize(query)
-  const sanitizedMyProfile = myProfile ? sanitizeProfile(myProfile) : null
-  const sanitizedCandidates = candidates.map((c: Record<string, unknown>) => sanitizeProfile(c))
+  // Apply nuclear sanitization to ALL inputs
+  const cleanQuery = nuclearClean(query) as string
+  const cleanMyProfile = nuclearClean(myProfile)
+  const cleanCandidates = nuclearClean(candidates) as Record<string, unknown>[]
 
   const systemPrompt = `You are a world-class professional matchmaker with deep understanding of startup dynamics and Ikigai philosophy.
 
@@ -51,11 +40,11 @@ Return ONLY valid JSON array, no markdown, no code blocks, no other text:
 [{"userId": "uuid", "score": number, "matchType": "Cofounder"|"Teammate"|"Client", "explanation": "string"}]
 Rank by score descending. Only include scores above 40.`
 
-  const userMessage = `Searcher profile: ${JSON.stringify(sanitizedMyProfile)}
+  const userMessage = `Searcher profile: ${JSON.stringify(cleanMyProfile)}
 
-Searcher query: "${sanitizedQuery}"
+Searcher query: "${cleanQuery}"
 
-Candidates: ${JSON.stringify(sanitizedCandidates)}`
+Candidates: ${JSON.stringify(cleanCandidates)}`
 
   try {
     const requestBody = {
