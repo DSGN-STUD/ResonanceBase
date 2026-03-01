@@ -11,8 +11,22 @@ import { Badge } from '@/components/ui/badge'
 import { Search, UserPlus, Eye, Sparkles } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
+import { IntroMessageModal } from '@/components/intro-message-modal'
 
 type MatchResult = {
+  userId: string
+  score: number
+  matchType: string
+  explanation: string
+  profile?: {
+    full_name: string | null
+    avatar_url: string | null
+    skills: string[]
+    ikigai_passion?: string | null
+  }
+}
+
+type FullMatchResult = {
   userId: string
   score: number
   matchType: string
@@ -135,6 +149,7 @@ export default function SearchPage() {
             full_name: cand.full_name,
             avatar_url: cand.avatar_url,
             skills: cand.skills ?? [],
+            ikigai_passion: cand.ikigai_passion,
           } : undefined,
         }
       })
@@ -175,8 +190,27 @@ export default function SearchPage() {
 
   // Track which users we've already sent connection requests to
   const [connectedUsers, setConnectedUsers] = useState<Set<string>>(new Set())
+  
+  // Intro message modal state
+  const [introModalOpen, setIntroModalOpen] = useState(false)
+  const [selectedMatch, setSelectedMatch] = useState<MatchResult | null>(null)
+  const [myProfile, setMyProfile] = useState<{ full_name: string | null; ikigai_passion: string | null; skills: string[] | null } | null>(null)
 
-  const handleConnect = async (matchedUserId: string) => {
+  // Fetch user profile for intro modal
+  useEffect(() => {
+    if (user) {
+      const supabase = createClient()
+      supabase.from('profiles').select('full_name, ikigai_passion, skills').eq('id', user.id).single()
+        .then(({ data }) => setMyProfile(data))
+    }
+  }, [user])
+
+  const openIntroModal = (match: MatchResult) => {
+    setSelectedMatch(match)
+    setIntroModalOpen(true)
+  }
+
+  const handleConnect = async (matchedUserId: string, message?: string) => {
     if (!user) return
     setConnecting(matchedUserId)
     try {
@@ -303,8 +337,8 @@ export default function SearchPage() {
                       Pending
                     </Button>
                   ) : (
-                    <Button size="sm" onClick={() => handleConnect(match.userId)}
-                      disabled={connecting === match.userId} className="gap-1.5">
+                    <Button size="sm" onClick={() => openIntroModal(match)}
+                      disabled={connecting === match.userId} className="gap-1.5 ai-glow">
                       <UserPlus className="h-3.5 w-3.5" />
                       {connecting === match.userId ? 'Sending...' : 'Connect'}
                     </Button>
@@ -329,6 +363,29 @@ export default function SearchPage() {
           </CardContent>
         </Card>
       )}
+
+      <IntroMessageModal
+        open={introModalOpen}
+        onOpenChange={setIntroModalOpen}
+        senderProfile={myProfile}
+        receiverProfile={selectedMatch?.profile ? {
+          full_name: selectedMatch.profile.full_name,
+          ikigai_passion: selectedMatch.profile.ikigai_passion || null,
+          skills: selectedMatch.profile.skills || null
+        } : null}
+        onSend={(message) => {
+          if (selectedMatch) {
+            handleConnect(selectedMatch.userId, message)
+          }
+          setIntroModalOpen(false)
+        }}
+        onSkip={() => {
+          if (selectedMatch) {
+            handleConnect(selectedMatch.userId)
+          }
+          setIntroModalOpen(false)
+        }}
+      />
     </div>
   )
 }
