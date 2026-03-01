@@ -3,27 +3,31 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* Light theme (default) - Claude/Notion aesthetic */
+/* Light theme (default) - Premium Notion aesthetic */
 :root {
   --background: #ffffff;
-  --foreground: #0f172a;
-  --card: #f8fafc;
-  --card-foreground: #0f172a;
-  --card-border: #e2e8f0;
+  --background-secondary: #f8f8f7;
+  --foreground: #1a1a1a;
+  --foreground-secondary: #6b6b6b;
+  --card: #ffffff;
+  --card-foreground: #1a1a1a;
+  --card-hover: #f8f8f7;
+  --card-border: #e5e5e3;
   --popover: #ffffff;
-  --popover-foreground: #0f172a;
+  --popover-foreground: #1a1a1a;
   --primary: #6366f1;
+  --primary-hover: #4f46e5;
   --primary-foreground: #ffffff;
-  --secondary: #f1f5f9;
-  --secondary-foreground: #0f172a;
-  --muted: #f1f5f9;
-  --muted-foreground: #64748b;
-  --accent: #f1f5f9;
-  --accent-foreground: #0f172a;
+  --secondary: #f8f8f7;
+  --secondary-foreground: #1a1a1a;
+  --muted: #f8f8f7;
+  --muted-foreground: #6b6b6b;
+  --accent: #f8f8f7;
+  --accent-foreground: #1a1a1a;
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
-  --border: #e2e8f0;
-  --input: #e2e8f0;
+  --border: #e5e5e3;
+  --input: #e5e5e3;
   --ring: #6366f1;
   --chart-1: #6366f1;
   --chart-2: #22c55e;
@@ -31,46 +35,54 @@
   --chart-4: #3b82f6;
   --chart-5: #f97316;
   --radius: 0.75rem;
-  --sidebar: #f1f5f9;
-  --sidebar-foreground: #0f172a;
+  --sidebar: #fbfbfa;
+  --sidebar-foreground: #1a1a1a;
   --sidebar-primary: #6366f1;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #e2e8f0;
-  --sidebar-accent-foreground: #0f172a;
-  --sidebar-border: #e2e8f0;
+  --sidebar-accent: #f8f8f7;
+  --sidebar-accent-foreground: #1a1a1a;
+  --sidebar-border: #e5e5e3;
   --sidebar-ring: #6366f1;
+  --success: #22c55e;
+  --warning: #eab308;
 }
 
-/* Dark theme - Claude dark aesthetic */
+/* Dark theme - Warm dark aesthetic */
 .dark {
-  --background: #0f172a;
-  --foreground: #f8fafc;
-  --card: #1e293b;
-  --card-foreground: #f8fafc;
-  --card-border: #334155;
-  --popover: #1e293b;
-  --popover-foreground: #f8fafc;
+  --background: #30302e;
+  --background-secondary: #3a3a38;
+  --foreground: #f5f5f4;
+  --foreground-secondary: #a8a8a3;
+  --card: #3a3a38;
+  --card-foreground: #f5f5f4;
+  --card-hover: #424240;
+  --card-border: #4a4a48;
+  --popover: #3a3a38;
+  --popover-foreground: #f5f5f4;
   --primary: #6366f1;
+  --primary-hover: #4f46e5;
   --primary-foreground: #ffffff;
-  --secondary: #334155;
-  --secondary-foreground: #f8fafc;
-  --muted: #334155;
-  --muted-foreground: #94a3b8;
-  --accent: #334155;
-  --accent-foreground: #f8fafc;
+  --secondary: #3a3a38;
+  --secondary-foreground: #f5f5f4;
+  --muted: #3a3a38;
+  --muted-foreground: #a8a8a3;
+  --accent: #3a3a38;
+  --accent-foreground: #f5f5f4;
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
-  --border: #334155;
-  --input: #334155;
+  --border: #4a4a48;
+  --input: #4a4a48;
   --ring: #6366f1;
-  --sidebar: #0f172a;
-  --sidebar-foreground: #f8fafc;
+  --sidebar: #2a2a28;
+  --sidebar-foreground: #f5f5f4;
   --sidebar-primary: #6366f1;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #1e293b;
-  --sidebar-accent-foreground: #f8fafc;
-  --sidebar-border: #1e293b;
+  --sidebar-accent: #3a3a38;
+  --sidebar-accent-foreground: #f5f5f4;
+  --sidebar-border: #3a3a38;
   --sidebar-ring: #6366f1;
+  --success: #22c55e;
+  --warning: #eab308;
 }
 
 @theme inline {
@@ -123,6 +135,14 @@
   body {
     @apply bg-background text-foreground transition-colors duration-200;
   }
+}
+
+/* Premium card styling for light mode */
+:root .card-premium {
+  box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+}
+.dark .card-premium {
+  box-shadow: none;
 }
 
 /* AI Glow button style */
