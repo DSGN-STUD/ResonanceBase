@@ -124,10 +124,10 @@ export default function MyProfilePage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
+    <div className="mx-auto max-w-5xl space-y-8 px-6 py-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">My Profile</h1>
+          <h1 className="mb-2 text-2xl font-bold">My Profile</h1>
           <p className="text-muted-foreground">Edit your profile information</p>
         </div>
         <div className="flex items-center gap-4">
@@ -146,12 +146,12 @@ export default function MyProfilePage() {
       <Card>
         <CardHeader><CardTitle className="text-base">Basic Info</CardTitle></CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid gap-2">
-            <Label>Full name</Label>
-            <Input value={fullName} onChange={(e) => setFullName(e.target.value)} />
+          <div className="grid gap-1">
+            <Label className="mb-1 text-sm font-medium">Full name</Label>
+            <Input value={fullName} onChange={(e) => setFullName(e.target.value)} className="h-10" />
           </div>
-          <div className="grid gap-2">
-            <Label>Bio</Label>
+          <div className="grid gap-1">
+            <Label className="mb-1 text-sm font-medium">Bio</Label>
             <Textarea value={bio} onChange={(e) => setBio(e.target.value)} />
           </div>
         </CardContent>
@@ -160,20 +160,23 @@ export default function MyProfilePage() {
       <Card>
         <CardHeader><CardTitle className="text-base">Ikigai</CardTitle></CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid gap-2">
-            <Label>Passion</Label>
+          <div className="grid gap-1">
+            <Label className="mb-1 text-sm font-medium">Passion</Label>
             <Textarea value={passion} onChange={(e) => setPassion(e.target.value)} />
           </div>
-          <div className="grid gap-2">
-            <Label>Mission</Label>
+          <Separator />
+          <div className="grid gap-1">
+            <Label className="mb-1 text-sm font-medium">Mission</Label>
             <Textarea value={mission} onChange={(e) => setMission(e.target.value)} />
           </div>
-          <div className="grid gap-2">
-            <Label>Vocation</Label>
+          <Separator />
+          <div className="grid gap-1">
+            <Label className="mb-1 text-sm font-medium">Vocation</Label>
             <Textarea value={vocation} onChange={(e) => setVocation(e.target.value)} />
           </div>
-          <div className="grid gap-2">
-            <Label>Profession</Label>
+          <Separator />
+          <div className="grid gap-1">
+            <Label className="mb-1 text-sm font-medium">Profession</Label>
             <Textarea value={profession} onChange={(e) => setProfession(e.target.value)} />
           </div>
         </CardContent>
@@ -266,17 +269,19 @@ export default function MyProfilePage() {
       <Card>
         <CardHeader><CardTitle className="text-base">Links</CardTitle></CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid gap-2">
-            <Label>Portfolio URL</Label>
-            <Input value={portfolioUrl} onChange={(e) => setPortfolioUrl(e.target.value)} placeholder="https://..." />
+          <div className="grid gap-1">
+            <Label className="mb-1 text-sm font-medium">Portfolio URL</Label>
+            <Input value={portfolioUrl} onChange={(e) => setPortfolioUrl(e.target.value)} placeholder="https://..." className="h-10" />
           </div>
-          <div className="grid gap-2">
-            <Label>GitHub URL</Label>
-            <Input value={githubUrl} onChange={(e) => setGithubUrl(e.target.value)} placeholder="https://github.com/..." />
+          <Separator />
+          <div className="grid gap-1">
+            <Label className="mb-1 text-sm font-medium">GitHub URL</Label>
+            <Input value={githubUrl} onChange={(e) => setGithubUrl(e.target.value)} placeholder="https://github.com/..." className="h-10" />
           </div>
-          <div className="grid gap-2">
-            <Label>LinkedIn URL</Label>
-            <Input value={linkedinUrl} onChange={(e) => setLinkedinUrl(e.target.value)} placeholder="https://linkedin.com/in/..." />
+          <Separator />
+          <div className="grid gap-1">
+            <Label className="mb-1 text-sm font-medium">LinkedIn URL</Label>
+            <Input value={linkedinUrl} onChange={(e) => setLinkedinUrl(e.target.value)} placeholder="https://linkedin.com/in/..." className="h-10" />
           </div>
         </CardContent>
       </Card>

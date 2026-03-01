@@ -84,9 +84,9 @@ export default function DashboardPage() {
   const firstName = profile?.full_name?.split(' ')[0] || 'there'
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto max-w-5xl space-y-8 px-6 py-8">
       <div>
-        <h1 className="text-2xl font-bold text-balance">Hey {firstName}, {"let's find your people"}</h1>
+        <h1 className="mb-2 text-2xl font-bold text-balance">Hey {firstName}, {"let's find your people"}</h1>
         <p className="text-muted-foreground">Your networking hub at a glance</p>
       </div>
 
@@ -143,15 +143,15 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-base">Recent Matches</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between pb-4">
+            <CardTitle className="text-lg font-semibold">Recent Matches</CardTitle>
             <Button variant="ghost" size="sm" asChild>
               <Link href="/search" className="gap-1 text-xs">View all <ArrowRight className="h-3 w-3" /></Link>
             </Button>
           </CardHeader>
           <CardContent>
             {recentMatches.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No matches yet. Start searching to find your people!</p>
+              <p className="py-12 text-center text-sm text-muted-foreground">No matches yet. Start searching to find your people!</p>
             ) : (
               <div className="space-y-3">
                 {recentMatches.map(match => (
@@ -171,15 +171,15 @@ export default function DashboardPage() {
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-base">Recent Messages</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between pb-4">
+            <CardTitle className="text-lg font-semibold">Recent Messages</CardTitle>
             <Button variant="ghost" size="sm" asChild>
               <Link href="/messages" className="gap-1 text-xs">View all <ArrowRight className="h-3 w-3" /></Link>
             </Button>
           </CardHeader>
           <CardContent>
             {recentMessages.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No messages yet. Connect with people to start chatting!</p>
+              <p className="py-12 text-center text-sm text-muted-foreground">No messages yet. Connect with people to start chatting!</p>
             ) : (
               <div className="space-y-3">
                 {recentMessages.map(msg => (

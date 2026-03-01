@@ -73,6 +73,25 @@ export default function ConnectionsPage() {
     loadConnections()
   }
 
+  const handleWithdraw = async (connId: string) => {
+    if (!user) return
+    const supabase = createClient()
+    const { error } = await supabase
+      .from('connections')
+      .delete()
+      .eq('id', connId)
+      .eq('requester_id', user.id)
+      .eq('status', 'pending')
+    
+    if (error) { 
+      toast.error('Failed to withdraw request')
+      return 
+    }
+    
+    setSent(prev => prev.filter(c => c.id !== connId))
+    toast.success('Connection request withdrawn')
+  }
+
   if (loading) {
     return (
       <div className="space-y-4">
@@ -84,14 +103,14 @@ export default function ConnectionsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto max-w-5xl space-y-8 px-6 py-8">
       <div>
-        <h1 className="text-2xl font-bold">Connections</h1>
+        <h1 className="mb-2 text-2xl font-bold">Connections</h1>
         <p className="text-muted-foreground">Manage your network</p>
       </div>
 
       <Tabs defaultValue="pending">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="mb-6 grid w-full grid-cols-3">
           <TabsTrigger value="pending" className="gap-1.5">
             Pending {pending.length > 0 && <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">{pending.length}</Badge>}
           </TabsTrigger>
@@ -99,13 +118,13 @@ export default function ConnectionsPage() {
           <TabsTrigger value="sent">Sent</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="pending" className="mt-4 space-y-3">
+        <TabsContent value="pending" className="mt-6 space-y-3">
           {pending.length === 0 ? (
-            <Card><CardContent className="p-8 text-center text-muted-foreground">No pending requests</CardContent></Card>
+            <Card><CardContent className="py-12 text-center text-muted-foreground">No pending requests</CardContent></Card>
           ) : (
             pending.map(conn => (
               <Card key={conn.id}>
-                <CardContent className="flex items-center gap-4 p-4">
+                <CardContent className="flex items-center gap-3 p-6">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/20 font-bold text-primary">
                     {(conn.profile?.full_name || '?')[0]}
                   </div>
@@ -113,7 +132,7 @@ export default function ConnectionsPage() {
                     <p className="font-medium">{conn.profile?.full_name || 'Unknown'}</p>
                     <p className="text-xs text-muted-foreground">Wants to connect</p>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-3">
                     <Button size="sm" onClick={() => handleAccept(conn.id)} className="gap-1.5">
                       <Check className="h-3.5 w-3.5" /> Accept
                     </Button>
@@ -127,16 +146,16 @@ export default function ConnectionsPage() {
           )}
         </TabsContent>
 
-        <TabsContent value="accepted" className="mt-4 space-y-3">
+        <TabsContent value="accepted" className="mt-6 space-y-3">
           {accepted.length === 0 ? (
-            <Card><CardContent className="p-8 text-center text-muted-foreground">
+            <Card><CardContent className="py-12 text-center text-muted-foreground">
               <Users className="mx-auto mb-2 h-8 w-8 text-muted-foreground/50" />
               No connections yet
             </CardContent></Card>
           ) : (
             accepted.map(conn => (
               <Card key={conn.id}>
-                <CardContent className="flex items-center gap-4 p-4">
+                <CardContent className="flex items-center gap-3 p-6">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/20 font-bold text-primary">
                     {(conn.profile?.full_name || '?')[0]}
                   </div>
@@ -155,13 +174,13 @@ export default function ConnectionsPage() {
           )}
         </TabsContent>
 
-        <TabsContent value="sent" className="mt-4 space-y-3">
+        <TabsContent value="sent" className="mt-6 space-y-3">
           {sent.length === 0 ? (
-            <Card><CardContent className="p-8 text-center text-muted-foreground">No sent requests</CardContent></Card>
+            <Card><CardContent className="py-12 text-center text-muted-foreground">No sent requests</CardContent></Card>
           ) : (
             sent.map(conn => (
               <Card key={conn.id}>
-                <CardContent className="flex items-center gap-4 p-4">
+                <CardContent className="flex items-center gap-3 p-6">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/20 font-bold text-primary">
                     {(conn.profile?.full_name || '?')[0]}
                   </div>
@@ -171,6 +190,14 @@ export default function ConnectionsPage() {
                   <Badge variant="outline" className="gap-1.5">
                     <Clock className="h-3 w-3" /> Pending
                   </Badge>
+                  <Button 
+                    size="sm" 
+                    variant="ghost" 
+                    onClick={() => handleWithdraw(conn.id)}
+                    className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                  >
+                    Withdraw
+                  </Button>
                 </CardContent>
               </Card>
             ))

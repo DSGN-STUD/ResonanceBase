@@ -115,11 +115,11 @@ export default function ProfileViewPage() {
   ]
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
+    <div className="mx-auto max-w-5xl space-y-8 px-6 py-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold">{profile.full_name || 'Anonymous'}</h1>
-          {profile.bio && <p className="mt-1 text-muted-foreground">{profile.bio}</p>}
+          <h1 className="mb-2 text-2xl font-bold">{profile.full_name || 'Anonymous'}</h1>
+          {profile.bio && <p className="text-muted-foreground">{profile.bio}</p>}
         </div>
         {user && user.id !== id && (
           <div className="flex gap-2">
@@ -164,7 +164,7 @@ export default function ProfileViewPage() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Card>
           <CardHeader><CardTitle className="text-base">Skills</CardTitle></CardHeader>
-          <CardContent>
+          <CardContent className="p-6 pt-0">
             {profile.skills?.length > 0 ? (
               <div className="flex flex-wrap gap-2">
                 {profile.skills.map(s => <Badge key={s} variant="secondary">{s}</Badge>)}
@@ -174,7 +174,7 @@ export default function ProfileViewPage() {
         </Card>
         <Card>
           <CardHeader><CardTitle className="text-base">Looking for</CardTitle></CardHeader>
-          <CardContent>
+          <CardContent className="p-6 pt-0">
             {profile.intent?.length > 0 ? (
               <div className="flex flex-wrap gap-2">
                 {profile.intent.map(i => <Badge key={i}>{i}</Badge>)}
