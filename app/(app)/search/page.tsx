@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/lib/auth-context'
 import { Button } from '@/components/ui/button'
@@ -29,7 +29,7 @@ const FILTERS = ['All', 'Cofounder', 'Teammate', 'Client']
 function ScoreBadge({ score }: { score: number }) {
   const color = score >= 80 ? 'bg-green-500' : score >= 60 ? 'bg-yellow-500' : 'bg-red-500'
   return (
-    <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-full ${color} text-lg font-bold text-white`}>
+    <div className={"flex h-14 w-14 shrink-0 items-center justify-center rounded-full " + color + " text-lg font-bold text-white"}>
       {score}
     </div>
   )
@@ -43,6 +43,20 @@ export default function SearchPage() {
   const [searching, setSearching] = useState(false)
   const [connecting, setConnecting] = useState<string | null>(null)
 
+  // Restore previous search results from sessionStorage on mount
+  useEffect(() => {
+    const saved = sessionStorage.getItem('lastSearchResults')
+    const savedQuery = sessionStorage.getItem('lastSearchQuery')
+    if (saved && savedQuery) {
+      try {
+        setResults(JSON.parse(saved))
+        setQuery(savedQuery)
+      } catch {
+        // Ignore parse errors
+      }
+    }
+  }, [])
+
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!query.trim() || !user) return
@@ -52,25 +66,15 @@ export default function SearchPage() {
 
     try {
       const supabase = createClient()
-      console.log('[v0] Search started for user:', user.id)
 
-      // Fetch current user profile
-      const { data: myProfile, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single()
+      // Fetch current user profile and candidates in parallel
+      const [profileRes, candidatesRes] = await Promise.all([
+        supabase.from('profiles').select('*').eq('id', user.id).single(),
+        supabase.from('profiles').select('*').eq('is_public', true).neq('id', user.id)
+      ])
 
-      console.log('[v0] My profile fetched:', !!myProfile, 'Error:', profileError?.message)
-
-      // Fetch all public profiles except current user
-      const { data: candidates, error: candidatesError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('is_public', true)
-        .neq('id', user.id)
-
-      console.log('[v0] Candidates fetched:', candidates?.length ?? 0, 'Error:', candidatesError?.message)
+      const myProfile = profileRes.data
+      const candidates = candidatesRes.data
 
       if (!candidates || candidates.length === 0) {
         toast.info('No profiles found yet. Be the first to complete your profile!')
@@ -78,9 +82,7 @@ export default function SearchPage() {
         return
       }
 
-      console.log('[v0] Calling /api/match with', candidates.length, 'candidates')
-
-      // Call AI API route with new parameter names
+      // Call AI API route
       const res = await fetch('/api/match', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -91,20 +93,14 @@ export default function SearchPage() {
         }),
       })
 
-      console.log('[v0] API response status:', res.status)
-
       if (!res.ok) {
-        const errorText = await res.text()
-        console.error('[v0] API error response:', errorText)
         throw new Error('AI matching failed')
       }
 
       const responseData = await res.json()
-      console.log('[v0] Match results received:', responseData)
       
       // Check if response is an error
       if (responseData.error) {
-        console.error('[v0] API returned error:', responseData.error)
         toast.error('AI Error: ' + responseData.error)
         setSearching(false)
         return
@@ -126,20 +122,32 @@ export default function SearchPage() {
         }
       })
 
-      // Save matches to DB
-      const matchInserts = enriched.map(m => ({
-        user_id: user.id,
-        matched_user_id: m.userId,
-        match_score: m.score,
-        match_type: m.matchType,
-        ai_explanation: m.explanation,
-      }))
-
-      if (matchInserts.length > 0) {
-        await supabase.from('matches').upsert(matchInserts, { onConflict: 'user_id,matched_user_id' })
-      }
-
+      // Show results immediately - don't wait for DB save
       setResults(enriched)
+      setSearching(false)
+      
+      // Save to sessionStorage for back navigation
+      sessionStorage.setItem('lastSearchResults', JSON.stringify(enriched))
+      sessionStorage.setItem('lastSearchQuery', query)
+
+      // Save matches to DB in background (don't await)
+      if (enriched.length > 0) {
+        supabase.from('matches').insert(
+          enriched.map(m => ({
+            user_id: user.id,
+            matched_user_id: m.userId,
+            match_score: m.score,
+            match_type: m.matchType,
+            ai_explanation: m.explanation,
+          }))
+        ).then(() => {
+          // Background save complete
+        }).catch(err => {
+          console.error('Failed to save matches:', err)
+        })
+      }
+      
+      return // Exit early since we already set searching to false
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Search failed')
     } finally {
