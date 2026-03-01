@@ -80,13 +80,13 @@ export default function SearchPage() {
 
       console.log('[v0] Calling /api/match with', candidates.length, 'candidates')
 
-      // Call AI API route
+      // Call AI API route with new parameter names
       const res = await fetch('/api/match', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          query,
-          myProfile,
+          searchQuery: query,
+          currentUser: myProfile,
           candidates,
         }),
       })
@@ -105,12 +105,13 @@ export default function SearchPage() {
       // Check if response is an error
       if (responseData.error) {
         console.error('[v0] API returned error:', responseData.error)
-        toast.error(`AI Error: ${responseData.error}`)
+        toast.error('AI Error: ' + responseData.error)
         setSearching(false)
         return
       }
       
-      const matchResults: MatchResult[] = Array.isArray(responseData) ? responseData : []
+      // API returns { matches: [...] }
+      const matchResults: MatchResult[] = Array.isArray(responseData.matches) ? responseData.matches : []
 
       // Enrich with profile data
       const enriched = matchResults.map(m => {
