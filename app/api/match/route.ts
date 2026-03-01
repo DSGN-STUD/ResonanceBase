@@ -56,10 +56,17 @@ Candidates: ${JSON.stringify(cleanCandidates)}`
       temperature: 0.7
     }
     
-    // Final sanitization pass on the entire JSON body
-    const cleanedBody = JSON.stringify(requestBody)
-      .replace(/\u2028/g, ' ')
-      .replace(/\u2029/g, ' ')
+    // Serialize to JSON first
+    const finalBody = JSON.stringify(requestBody)
+    
+    // Debug: find exactly what's at position 171
+    console.log('[v0] char at 171:', finalBody.charCodeAt(171), finalBody.substring(165, 180))
+    
+    // NUCLEAR: filter the final string itself - nothing survives this
+    const safeBody = finalBody
+      .split('')
+      .filter(c => c.charCodeAt(0) <= 255)
+      .join('')
     
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -67,7 +74,7 @@ Candidates: ${JSON.stringify(cleanCandidates)}`
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
       },
-      body: cleanedBody
+      body: safeBody
     })
 
     if (!response.ok) {
