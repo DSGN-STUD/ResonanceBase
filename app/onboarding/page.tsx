@@ -10,8 +10,9 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
-import { Sparkles, Heart, Target, Briefcase, Star, X } from 'lucide-react'
+import { Heart, Target, Briefcase, Star, X, Sun, Moon } from 'lucide-react'
 import { toast } from 'sonner'
+import { useTheme } from '@/components/theme-provider'
 
 const SKILL_SUGGESTIONS = ['React', 'Python', 'AI/ML', 'Design', 'Marketing', 'Sales', 'Finance', 'Operations', 'Content', 'TypeScript', 'Node.js', 'Product Management']
 
@@ -88,6 +89,7 @@ function PillSelect({ options, value, onChange }: {
 
 export default function OnboardingPage() {
   const router = useRouter()
+  const { theme, setTheme } = useTheme()
   const [step, setStep] = useState(1)
   const [saving, setSaving] = useState(false)
 
@@ -184,15 +186,16 @@ export default function OnboardingPage() {
   ]
 
   return (
-    <div className="flex min-h-svh w-full flex-col items-center justify-center p-6 md:p-10">
+    <div className="relative flex min-h-svh w-full flex-col items-center justify-center p-6 md:p-10">
+      <button
+        onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+        className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+      >
+        {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+      </button>
       <div className="w-full max-w-lg">
         <div className="mb-8 flex flex-col items-center gap-4">
-          <div className="flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary">
-              <Sparkles className="h-5 w-5 text-primary-foreground" />
-            </div>
-            <span className="text-xl font-bold text-foreground">SuperNetworkAI</span>
-          </div>
+          <span className="text-xl font-semibold text-foreground">Resonate</span>
           <div className="w-full space-y-2">
             <div className="flex items-center justify-between text-sm text-muted-foreground">
               <span>Step {step} of {totalSteps}</span>
