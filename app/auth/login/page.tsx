@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
-import { Sparkles, Sun, Moon } from 'lucide-react'
+import { Sun, Moon } from 'lucide-react'
 import { useTheme } from '@/components/theme-provider'
 
 export default function LoginPage() {
@@ -59,12 +59,7 @@ export default function LoginPage() {
       </button>
       <div className="w-full max-w-sm">
         <div className="flex flex-col items-center gap-6">
-          <div className="flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary">
-              <Sparkles className="h-5 w-5 text-primary-foreground" />
-            </div>
-            <span className="text-xl font-bold text-foreground">Resonate</span>
-          </div>
+          <span className="text-xl font-semibold text-foreground">Resonate</span>
           <Card className="w-full">
             <CardHeader>
               <CardTitle className="text-2xl">Welcome back</CardTitle>

@@ -6,7 +6,7 @@ import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
   SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarFooter,
 } from '@/components/ui/sidebar'
-import { LayoutDashboard, Search, Users, MessageSquare, UserCircle, LogOut, Sparkles } from 'lucide-react'
+import { LayoutDashboard, Search, Users, MessageSquare, UserCircle, LogOut } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { Button } from '@/components/ui/button'
 import { useRouter } from 'next/navigation'
@@ -32,11 +32,8 @@ export function AppSidebar() {
   return (
     <Sidebar>
       <SidebarHeader className="p-4">
-        <Link href="/dashboard" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-            <Sparkles className="h-4 w-4 text-primary-foreground" />
-          </div>
-          <span className="text-lg font-bold text-sidebar-foreground">Resonate</span>
+        <Link href="/dashboard">
+          <span className="text-lg font-semibold text-sidebar-foreground">Resonate</span>
         </Link>
       </SidebarHeader>
       <SidebarContent>

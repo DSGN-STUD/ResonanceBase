@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { Sparkles, Zap, Brain, Puzzle, Users, Sun, Moon } from 'lucide-react'
+import { Zap, Brain, Puzzle, Users, Sun, Moon, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { useTheme } from '@/components/theme-provider'
@@ -110,12 +110,7 @@ export default function LandingPage() {
 
       {/* Header */}
       <header className="flex items-center justify-between px-6 py-4 lg:px-12">
-        <div className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary">
-            <Sparkles className="h-4 w-4 text-primary-foreground" />
-          </div>
-          <span className="text-lg font-bold">Resonate</span>
-        </div>
+        <span className="text-lg font-semibold">Resonate</span>
         <nav className="hidden items-center gap-6 text-sm md:flex">
           <a href="#features" className="text-muted-foreground transition-colors hover:text-foreground">Features</a>
           <a href="#how-it-works" className="text-muted-foreground transition-colors hover:text-foreground">How it works</a>
@@ -148,10 +143,8 @@ export default function LandingPage() {
           Most partnerships fail before they start — not because of bad skills, but because of misaligned purpose. Resonate matches you on what actually matters: your Ikigai.
         </p>
         <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-          <Button size="lg" asChild className="ai-glow gap-2">
-            <Link href="/auth/sign-up">
-              <Sparkles className="h-4 w-4" /> Find Your Match
-            </Link>
+          <Button size="lg" asChild className="ai-glow">
+            <Link href="/auth/sign-up">Find Your Match</Link>
           </Button>
           <Button size="lg" variant="ghost" asChild>
             <a href="#how-it-works">See How It Works</a>
@@ -274,8 +267,7 @@ export default function LandingPage() {
       <footer className="border-t border-border px-6 py-8">
         <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-4 sm:flex-row">
           <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium">Resonate</span>
+            <span className="text-sm font-semibold">Resonate</span>
             <span className="text-sm text-muted-foreground">— Find your people.</span>
           </div>
           <div className="flex items-center gap-6 text-sm text-muted-foreground">

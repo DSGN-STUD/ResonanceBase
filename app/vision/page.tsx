@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Sparkles, Sun, Moon, Puzzle, Users, Brain, Shield, Lightbulb, Network } from 'lucide-react'
+import { Sun, Moon, Brain, Shield, Lightbulb, Network } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { useTheme } from '@/components/theme-provider'
@@ -79,11 +79,8 @@ export default function VisionPage() {
     <div className="min-h-svh bg-background text-foreground transition-colors duration-200">
       {/* Header */}
       <header className="flex items-center justify-between px-6 py-4 lg:px-12">
-        <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary">
-            <Sparkles className="h-4 w-4 text-primary-foreground" />
-          </div>
-          <span className="text-lg font-bold">Resonate</span>
+        <Link href="/">
+          <span className="text-lg font-semibold">Resonate</span>
         </Link>
         <div className="flex items-center gap-3">
           <button
@@ -205,8 +202,7 @@ export default function VisionPage() {
       <footer className="border-t border-border px-6 py-8">
         <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-4 sm:flex-row">
           <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium">Resonate</span>
+            <span className="text-sm font-semibold">Resonate</span>
             <span className="text-sm text-muted-foreground">— Find your people.</span>
           </div>
           <div className="flex items-center gap-6 text-sm text-muted-foreground">
