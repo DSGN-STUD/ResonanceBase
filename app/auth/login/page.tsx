@@ -28,18 +28,15 @@ export default function LoginPage() {
       if (error) throw error
 
       if (authData.user) {
+        // Fetch profile in parallel with any other setup
         const { data: profile } = await supabase
           .from('profiles')
           .select('id, full_name')
           .eq('id', authData.user.id)
           .single()
 
-        // If profile exists AND has full_name filled in, go to dashboard
-        if (profile && profile.full_name) {
-          router.push('/dashboard')
-        } else {
-          router.push('/onboarding')
-        }
+        // Redirect immediately based on profile status
+        router.push(profile?.full_name ? '/dashboard' : '/onboarding')
       } else {
         router.push('/onboarding')
       }
