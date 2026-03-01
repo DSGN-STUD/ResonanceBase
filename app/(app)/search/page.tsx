@@ -245,13 +245,13 @@ export default function SearchPage() {
 
 
   return (
-    <div className="mx-auto max-w-5xl space-y-8 px-6 py-8">
+    <div className="space-y-6">
       <div>
-        <h1 className="mb-2 text-2xl font-bold">Find Your Match</h1>
+        <h1 className="text-2xl font-bold">Find Your Match</h1>
         <p className="text-muted-foreground">Describe who you are looking for in plain English</p>
       </div>
 
-      <form onSubmit={handleSearch} className="mb-6 flex gap-3">
+      <form onSubmit={handleSearch} className="flex gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -267,7 +267,7 @@ export default function SearchPage() {
         </Button>
       </form>
 
-      <div className="mb-6 flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2">
         {FILTERS.map(f => (
           <button key={f} onClick={() => handleFilterChange(f)}
             className={"rounded-full px-4 py-1.5 text-sm font-medium transition-colors " + (
@@ -309,7 +309,7 @@ export default function SearchPage() {
         <div className="space-y-4">
           {filteredMatches.map(match => (
             <Card key={match.userId}>
-              <CardContent className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center">
+              <CardContent className="flex flex-col gap-4 p-6 sm:flex-row sm:items-start">
                 <ScoreBadge score={match.score} />
                 <div className="min-w-0 flex-1 space-y-2">
                   <div className="flex flex-wrap items-center gap-2">

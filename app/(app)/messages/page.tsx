@@ -37,10 +37,6 @@ export default function MessagesPage() {
   const [newMessage, setNewMessage] = useState('')
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState(false)
-  const [icebreakers, setIcebreakers] = useState<string[]>([])
-  const [loadingIcebreakers, setLoadingIcebreakers] = useState(false)
-  const [myProfile, setMyProfile] = useState<{ full_name: string | null; ikigai_passion: string | null } | null>(null)
-  const [contactProfile, setContactProfile] = useState<{ ikigai_passion: string | null } | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const loadContacts = useCallback(async () => {
@@ -81,14 +77,6 @@ export default function MessagesPage() {
     loadContacts()
   }, [loadContacts])
 
-  // Fetch current user profile for icebreakers
-  useEffect(() => {
-    if (!user) return
-    const supabase = createClient()
-    supabase.from('profiles').select('full_name, ikigai_passion').eq('id', user.id).single()
-      .then(({ data }) => setMyProfile(data))
-  }, [user])
-
   const loadMessages = useCallback(async (contactId: string) => {
     if (!user) return
     const supabase = createClient()
@@ -111,49 +99,8 @@ export default function MessagesPage() {
   useEffect(() => {
     if (selectedContact) {
       loadMessages(selectedContact.id)
-      // Reset icebreakers when changing contacts
-      setIcebreakers([])
     }
   }, [selectedContact, loadMessages])
-
-  // Fetch icebreakers when conversation is empty
-  useEffect(() => {
-    if (!selectedContact || messages.length > 0 || loadingIcebreakers || icebreakers.length > 0) return
-    if (!myProfile) return
-
-    const fetchIcebreakers = async () => {
-      setLoadingIcebreakers(true)
-      try {
-        const supabase = createClient()
-        const { data: contactData } = await supabase
-          .from('profiles')
-          .select('ikigai_passion')
-          .eq('id', selectedContact.id)
-          .single()
-        
-        setContactProfile(contactData)
-
-        const res = await fetch('/api/icebreaker', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            senderName: myProfile.full_name,
-            receiverName: selectedContact.full_name,
-            senderPassion: myProfile.ikigai_passion,
-            receiverPassion: contactData?.ikigai_passion
-          })
-        })
-        const data = await res.json()
-        setIcebreakers(data.prompts || [])
-      } catch {
-        // Silently fail
-      } finally {
-        setLoadingIcebreakers(false)
-      }
-    }
-    
-    fetchIcebreakers()
-  }, [selectedContact, messages.length, loadingIcebreakers, icebreakers.length, myProfile])
 
   // Realtime subscription
   useEffect(() => {
@@ -219,12 +166,12 @@ export default function MessagesPage() {
 
   if (contacts.length === 0) {
     return (
-      <div className="mx-auto max-w-5xl space-y-8 px-6 py-8">
+      <div className="space-y-6">
         <div>
-          <h1 className="mb-2 text-2xl font-bold">Messages</h1>
+          <h1 className="text-2xl font-bold">Messages</h1>
           <p className="text-muted-foreground">Chat with your connections</p>
         </div>
-        <Card className="flex flex-col items-center gap-3 py-12 text-center">
+        <Card className="flex flex-col items-center gap-3 p-12 text-center">
           <MessageSquare className="h-12 w-12 text-muted-foreground/30" />
           <h3 className="text-lg font-semibold">No connections yet</h3>
           <p className="text-sm text-muted-foreground">Connect with someone first to start messaging</p>
@@ -234,9 +181,9 @@ export default function MessagesPage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 px-6 py-8">
+    <div className="space-y-4">
       <div>
-        <h1 className="mb-2 text-2xl font-bold">Messages</h1>
+        <h1 className="text-2xl font-bold">Messages</h1>
         <p className="text-muted-foreground">Chat with your connections</p>
       </div>
 
@@ -244,7 +191,7 @@ export default function MessagesPage() {
         {/* Contact list */}
         <Card className="w-72 shrink-0 overflow-hidden">
           <ScrollArea className="h-full">
-            <div className="space-y-1 p-4">
+            <div className="space-y-1 p-2">
               {contacts.map(contact => (
                 <button key={contact.id} onClick={() => setSelectedContact(contact)}
                   className={cn(
@@ -276,7 +223,7 @@ export default function MessagesPage() {
                 {messages.map(msg => (
                   <div key={msg.id} className={cn('flex', msg.sender_id === user?.id ? 'justify-end' : 'justify-start')}>
                     <div className={cn(
-                      'max-w-xs rounded-2xl px-4 py-2 text-sm',
+                      'max-w-[70%] rounded-2xl px-4 py-2 text-sm',
                       msg.sender_id === user?.id
                         ? 'bg-primary text-primary-foreground'
                         : 'bg-secondary text-secondary-foreground'
@@ -288,26 +235,12 @@ export default function MessagesPage() {
                 <div ref={messagesEndRef} />
               </div>
             </ScrollArea>
-            {/* Icebreaker prompts - only show when no messages */}
-            {messages.length === 0 && icebreakers.length > 0 && (
-              <div className="flex flex-wrap gap-2 border-t border-border px-4 pt-3">
-                {icebreakers.map((prompt, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setNewMessage(prompt)}
-                    className="rounded-full bg-primary/10 px-3 py-1.5 text-xs text-primary transition-colors hover:bg-primary/20"
-                  >
-                    {prompt}
-                  </button>
-                ))}
-              </div>
-            )}
             <form onSubmit={handleSend} className="flex gap-2 border-t border-border p-4">
               <Input
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 placeholder="Type a message..."
-                className="h-10 flex-1"
+                className="flex-1"
               />
               <Button type="submit" size="icon" disabled={sending || !newMessage.trim()}>
                 <Send className="h-4 w-4" />
