@@ -32,7 +32,7 @@ export default function SignUpPage() {
     }
 
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -41,7 +41,15 @@ export default function SignUpPage() {
         },
       })
       if (error) throw error
-      router.push('/auth/sign-up-success')
+      
+      // If session exists (email confirmation disabled), go directly to onboarding
+      if (data.session) {
+        router.push('/onboarding')
+      } else {
+        // No session means email confirmation is required
+        // Show the success page telling user to check email
+        router.push('/auth/sign-up-success')
+      }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'An error occurred')
     } finally {
