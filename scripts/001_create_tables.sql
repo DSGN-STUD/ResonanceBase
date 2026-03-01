@@ -109,5 +109,4 @@ create trigger on_auth_user_created
   for each row
   execute function public.handle_new_user();
 
--- Enable realtime for messages
-alter publication supabase_realtime add table public.messages;
+-- Realtime for messages is enabled via Supabase dashboard
