@@ -1,9 +1,35 @@
+// Sanitize strings to remove non-ASCII characters that cause ByteString errors
+const sanitize = (str: unknown): string => 
+  typeof str === 'string' ? str.replace(/[^\x00-\x7F]/g, ' ').trim() : ''
+
+const sanitizeArray = (arr: unknown): string[] =>
+  Array.isArray(arr) ? arr.map(item => sanitize(item)) : []
+
+const sanitizeProfile = (profile: Record<string, unknown>) => ({
+  id: profile.id,
+  full_name: sanitize(profile.full_name),
+  bio: sanitize(profile.bio),
+  skills: sanitizeArray(profile.skills),
+  interests: sanitizeArray(profile.interests),
+  ikigai_passion: sanitize(profile.ikigai_passion),
+  ikigai_mission: sanitize(profile.ikigai_mission),
+  ikigai_vocation: sanitize(profile.ikigai_vocation),
+  ikigai_profession: sanitize(profile.ikigai_profession),
+  intent: sanitizeArray(profile.intent),
+  availability: sanitize(profile.availability),
+  working_style: sanitize(profile.working_style),
+})
+
 export async function POST(req: Request) {
   const { query, myProfile, candidates } = await req.json()
 
   if (!candidates || candidates.length === 0) {
     return Response.json([])
   }
+
+  const sanitizedQuery = sanitize(query)
+  const sanitizedMyProfile = myProfile ? sanitizeProfile(myProfile) : null
+  const sanitizedCandidates = candidates.map((c: Record<string, unknown>) => sanitizeProfile(c))
 
   const systemPrompt = `You are a world-class professional matchmaker with deep understanding of startup dynamics and Ikigai philosophy.
 
@@ -19,24 +45,11 @@ Return ONLY valid JSON array, no markdown, no code blocks, no other text:
 [{"userId": "uuid", "score": number, "matchType": "Cofounder"|"Teammate"|"Client", "explanation": "string"}]
 Rank by score descending. Only include scores above 40.`
 
-  const userMessage = `Searcher profile: ${JSON.stringify(myProfile)}
+  const userMessage = `Searcher profile: ${JSON.stringify(sanitizedMyProfile)}
 
-Searcher query: "${query}"
+Searcher query: "${sanitizedQuery}"
 
-Candidates: ${JSON.stringify(candidates.map((c: Record<string, unknown>) => ({
-    id: c.id,
-    full_name: c.full_name,
-    bio: c.bio,
-    skills: c.skills,
-    interests: c.interests,
-    ikigai_passion: c.ikigai_passion,
-    ikigai_mission: c.ikigai_mission,
-    ikigai_vocation: c.ikigai_vocation,
-    ikigai_profession: c.ikigai_profession,
-    intent: c.intent,
-    availability: c.availability,
-    working_style: c.working_style,
-  })))}`
+Candidates: ${JSON.stringify(sanitizedCandidates)}`
 
   try {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
