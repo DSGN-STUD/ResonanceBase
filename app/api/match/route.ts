@@ -26,25 +26,22 @@ export async function POST(req: Request) {
   const cleanMyProfile = nuclearClean(myProfile)
   const cleanCandidates = nuclearClean(candidates) as Record<string, unknown>[]
 
-  const systemPrompt = `You are a world-class professional matchmaker with deep understanding of startup dynamics and Ikigai philosophy.
+  // Use string concatenation to avoid Unicode line separators in template literals
+  const systemPrompt = "You are a world-class professional matchmaker. " +
+    "Given the searcher profile and search query, evaluate each candidate " +
+    "and score them 0-100 based on: " +
+    "1. Ikigai complementarity. " +
+    "2. Skill gap filling. " +
+    "3. Intent alignment. " +
+    "4. Working style compatibility. " +
+    "For each match write a 2-sentence explanation. " +
+    "Return ONLY valid JSON array: " +
+    "[{\"userId\": \"uuid\", \"score\": number, \"matchType\": \"Cofounder\"|\"Teammate\"|\"Client\", \"explanation\": \"string\"}] " +
+    "Rank by score descending. Only include scores above 40."
 
-Given the searcher's complete profile and their natural language query, evaluate each candidate and score them 0-100 based on:
-1. Ikigai complementarity — do their life purposes align?
-2. Skill gap filling — do they have what the searcher lacks?
-3. Intent alignment — are both open to the same relationship type?
-4. Working style compatibility — availability and remote preferences
-
-For each match write a 2-sentence explanation referencing specific details from both profiles. Sound like a smart friend making an introduction.
-
-Return ONLY valid JSON array, no markdown, no code blocks, no other text:
-[{"userId": "uuid", "score": number, "matchType": "Cofounder"|"Teammate"|"Client", "explanation": "string"}]
-Rank by score descending. Only include scores above 40.`
-
-  const userMessage = `Searcher profile: ${JSON.stringify(cleanMyProfile)}
-
-Searcher query: "${cleanQuery}"
-
-Candidates: ${JSON.stringify(cleanCandidates)}`
+  const userMessage = "Searcher profile: " + JSON.stringify(cleanMyProfile) +
+    " Searcher query: " + JSON.stringify(cleanQuery) +
+    " Candidates: " + JSON.stringify(cleanCandidates)
 
   try {
     const requestBody = {
@@ -56,13 +53,8 @@ Candidates: ${JSON.stringify(cleanCandidates)}`
       temperature: 0.7
     }
     
-    // Serialize to JSON first
+    // Serialize to JSON and apply nuclear filter as last line of defense
     const finalBody = JSON.stringify(requestBody)
-    
-    // Debug: find exactly what's at position 171
-    console.log('[v0] char at 171:', finalBody.charCodeAt(171), finalBody.substring(165, 180))
-    
-    // NUCLEAR: filter the final string itself - nothing survives this
     const safeBody = finalBody
       .split('')
       .filter(c => c.charCodeAt(0) <= 255)
