@@ -21,7 +21,6 @@ export default function SignUpPage() {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log('[v0] Starting signup process...')
     const supabase = createClient()
     setIsLoading(true)
     setError(null)
@@ -32,24 +31,18 @@ export default function SignUpPage() {
       return
     }
 
-    const redirectUrl = `${window.location.origin}/auth/callback`
-    console.log('[v0] Redirect URL:', redirectUrl)
-
     try {
-      console.log('[v0] Calling supabase.auth.signUp with email:', email)
-      const { data, error } = await supabase.auth.signUp({
+      const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: redirectUrl,
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
           data: { full_name: fullName },
         },
       })
-      console.log('[v0] SignUp response - data:', data, 'error:', error)
       if (error) throw error
       router.push('/auth/sign-up-success')
     } catch (err: unknown) {
-      console.error('[v0] SignUp error:', err)
       setError(err instanceof Error ? err.message : 'An error occurred')
     } finally {
       setIsLoading(false)
