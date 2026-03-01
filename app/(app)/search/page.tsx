@@ -155,18 +155,33 @@ export default function SearchPage() {
     }
   }
 
+  // Track which users we've already sent connection requests to
+  const [connectedUsers, setConnectedUsers] = useState<Set<string>>(new Set())
+
   const handleConnect = async (matchedUserId: string) => {
     if (!user) return
     setConnecting(matchedUserId)
     try {
       const supabase = createClient()
-      const { error } = await supabase.from('connections').upsert({
+      const { error } = await supabase.from('connections').insert({
         requester_id: user.id,
         receiver_id: matchedUserId,
         status: 'pending',
-      }, { onConflict: 'requester_id,receiver_id' })
+      })
 
-      if (error) throw error
+      if (error) {
+        console.error('Connection error:', error.message)
+        // If it's a duplicate, just mark as connected
+        if (error.code === '23505') {
+          setConnectedUsers(prev => new Set(prev).add(matchedUserId))
+          toast.info('Connection request already sent')
+          return
+        }
+        throw error
+      }
+      
+      // Update UI immediately to show "Pending"
+      setConnectedUsers(prev => new Set(prev).add(matchedUserId))
       toast.success('Connection request sent!')
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to connect')
@@ -265,11 +280,17 @@ export default function SearchPage() {
                       View
                     </Link>
                   </Button>
-                  <Button size="sm" onClick={() => handleConnect(match.userId)}
-                    disabled={connecting === match.userId} className="gap-1.5">
-                    <UserPlus className="h-3.5 w-3.5" />
-                    {connecting === match.userId ? 'Sending...' : 'Connect'}
-                  </Button>
+                  {connectedUsers.has(match.userId) ? (
+                    <Button size="sm" variant="outline" disabled className="gap-1.5">
+                      Pending
+                    </Button>
+                  ) : (
+                    <Button size="sm" onClick={() => handleConnect(match.userId)}
+                      disabled={connecting === match.userId} className="gap-1.5">
+                      <UserPlus className="h-3.5 w-3.5" />
+                      {connecting === match.userId ? 'Sending...' : 'Connect'}
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>

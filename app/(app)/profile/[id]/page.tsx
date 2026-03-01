@@ -67,12 +67,24 @@ export default function ProfileViewPage() {
     setConnecting(true)
     try {
       const supabase = createClient()
-      const { error } = await supabase.from('connections').upsert({
+      const { error } = await supabase.from('connections').insert({
         requester_id: user.id,
         receiver_id: id,
         status: 'pending',
-      }, { onConflict: 'requester_id,receiver_id' })
-      if (error) throw error
+      })
+      
+      if (error) {
+        console.error('Connection error:', error.message)
+        // If it's a duplicate, just update the UI
+        if (error.code === '23505') {
+          setConnectionStatus('pending')
+          toast.info('Connection request already sent')
+          return
+        }
+        throw error
+      }
+      
+      // Update UI immediately
       setConnectionStatus('pending')
       toast.success('Connection request sent!')
     } catch (err) {
