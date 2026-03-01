@@ -50,7 +50,7 @@ export default function ProfileViewPage() {
 
       if (user && user.id !== id) {
         const { data: conn } = await supabase.from('connections').select('status')
-          .or(`and(requester_id.eq.${user.id},addressee_id.eq.${id}),and(requester_id.eq.${id},addressee_id.eq.${user.id})`)
+          .or(`and(requester_id.eq.${user.id},receiver_id.eq.${id}),and(requester_id.eq.${id},receiver_id.eq.${user.id})`)
           .limit(1)
           .single()
 
@@ -69,9 +69,9 @@ export default function ProfileViewPage() {
       const supabase = createClient()
       const { error } = await supabase.from('connections').upsert({
         requester_id: user.id,
-        addressee_id: id,
+        receiver_id: id,
         status: 'pending',
-      }, { onConflict: 'requester_id,addressee_id' })
+      }, { onConflict: 'requester_id,receiver_id' })
       if (error) throw error
       setConnectionStatus('pending')
       toast.success('Connection request sent!')
