@@ -124,7 +124,10 @@ export default function OnboardingPage() {
     try {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('Not authenticated')
+      if (!user) {
+        router.push('/auth/login')
+        return
+      }
 
       const profileData: Record<string, unknown> = { id: user.id }
 
