@@ -7,7 +7,7 @@ import './globals.css'
 const _inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'SuperNetworkAI - Find Your Perfect Match',
+  title: 'Resonate - Find Your Perfect Match',
   description: 'AI-powered networking platform that matches cofounders, teammates, and clients using Ikigai-driven discovery.',
 }
 

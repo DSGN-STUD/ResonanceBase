@@ -4,7 +4,7 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Deep navy theme - SuperNetworkAI */
+  /* Deep navy theme - Resonate */
   --background: #0F172A;
   --foreground: #F8FAFC;
   --card: #1E293B;
