@@ -39,7 +39,8 @@ export default function SearchPage() {
   const { user } = useAuth()
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState('All')
-  const [results, setResults] = useState<MatchResult[]>([])
+  const [allMatches, setAllMatches] = useState<MatchResult[]>([])
+  const [filteredMatches, setFilteredMatches] = useState<MatchResult[]>([])
   const [searching, setSearching] = useState(false)
   const [connecting, setConnecting] = useState<string | null>(null)
 
@@ -49,7 +50,9 @@ export default function SearchPage() {
     const savedQuery = sessionStorage.getItem('lastSearchQuery')
     if (saved && savedQuery) {
       try {
-        setResults(JSON.parse(saved))
+        const parsed = JSON.parse(saved)
+        setAllMatches(parsed)
+        setFilteredMatches(parsed)
         setQuery(savedQuery)
       } catch {
         // Ignore parse errors
@@ -57,12 +60,26 @@ export default function SearchPage() {
     }
   }, [])
 
+  // Handle filter tab changes
+  const handleFilterChange = (tab: string) => {
+    setFilter(tab)
+    if (tab === 'All') {
+      setFilteredMatches(allMatches)
+    } else {
+      setFilteredMatches(allMatches.filter(m => 
+        m.matchType?.toLowerCase() === tab.toLowerCase()
+      ))
+    }
+  }
+
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!query.trim() || !user) return
 
     setSearching(true)
-    setResults([])
+    setAllMatches([])
+    setFilteredMatches([])
+    setFilter('All')
 
     try {
       const supabase = createClient()
@@ -123,10 +140,11 @@ export default function SearchPage() {
       })
 
       // Show results immediately - don't wait for DB save
-      setResults(enriched)
+      setAllMatches(enriched)
+      setFilteredMatches(enriched)
       setSearching(false)
       
-      // Save to sessionStorage for back navigation
+      // Save allMatches to sessionStorage for back navigation
       sessionStorage.setItem('lastSearchResults', JSON.stringify(enriched))
       sessionStorage.setItem('lastSearchQuery', query)
 
@@ -190,7 +208,7 @@ export default function SearchPage() {
     }
   }
 
-  const filtered = filter === 'All' ? results : results.filter(r => r.matchType === filter)
+
 
   return (
     <div className="space-y-6">
@@ -217,12 +235,12 @@ export default function SearchPage() {
 
       <div className="flex flex-wrap gap-2">
         {FILTERS.map(f => (
-          <button key={f} onClick={() => setFilter(f)}
-            className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+          <button key={f} onClick={() => handleFilterChange(f)}
+            className={"rounded-full px-4 py-1.5 text-sm font-medium transition-colors " + (
               filter === f
                 ? 'bg-primary text-primary-foreground'
                 : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
-            }`}>
+            )}>
             {f}
           </button>
         ))}
@@ -245,7 +263,7 @@ export default function SearchPage() {
         </div>
       )}
 
-      {!searching && results.length > 0 && filtered.length === 0 && (
+      {!searching && allMatches.length > 0 && filteredMatches.length === 0 && (
         <Card>
           <CardContent className="p-8 text-center">
             <p className="text-muted-foreground">No matches found for this filter. Try selecting a different category.</p>
@@ -253,9 +271,9 @@ export default function SearchPage() {
         </Card>
       )}
 
-      {!searching && filtered.length > 0 && (
+      {!searching && filteredMatches.length > 0 && (
         <div className="space-y-4">
-          {filtered.map(match => (
+          {filteredMatches.map(match => (
             <Card key={match.userId}>
               <CardContent className="flex flex-col gap-4 p-6 sm:flex-row sm:items-start">
                 <ScoreBadge score={match.score} />
@@ -298,7 +316,7 @@ export default function SearchPage() {
         </div>
       )}
 
-      {!searching && results.length === 0 && (
+      {!searching && allMatches.length === 0 && (
         <Card>
           <CardContent className="flex flex-col items-center gap-3 p-12 text-center">
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
