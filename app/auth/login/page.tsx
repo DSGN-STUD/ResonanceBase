@@ -24,17 +24,22 @@ export default function LoginPage() {
     setError(null)
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password })
+      const { data: authData, error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) throw error
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('full_name')
-        .eq('id', (await supabase.auth.getUser()).data.user?.id)
-        .single()
+      if (authData.user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('id, full_name')
+          .eq('id', authData.user.id)
+          .single()
 
-      if (profile?.full_name) {
-        router.push('/dashboard')
+        // If profile exists AND has full_name filled in, go to dashboard
+        if (profile && profile.full_name) {
+          router.push('/dashboard')
+        } else {
+          router.push('/onboarding')
+        }
       } else {
         router.push('/onboarding')
       }

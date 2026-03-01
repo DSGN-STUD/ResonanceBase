@@ -92,6 +92,7 @@ export default function OnboardingPage() {
   const [saving, setSaving] = useState(false)
 
   // Step 1 - Ikigai
+  const [fullName, setFullName] = useState('')
   const [passion, setPassion] = useState('')
   const [mission, setMission] = useState('')
   const [vocation, setVocation] = useState('')
@@ -132,6 +133,8 @@ export default function OnboardingPage() {
       const profileData: Record<string, unknown> = { id: user.id }
 
       if (step === 1) {
+        // full_name is required to mark profile as complete
+        profileData.full_name = fullName || 'Anonymous User'
         profileData.ikigai_passion = passion
         profileData.ikigai_mission = mission
         profileData.ikigai_vocation = vocation
@@ -215,22 +218,27 @@ export default function OnboardingPage() {
             {step === 1 && (
               <div className="space-y-4">
                 <div className="grid gap-2">
-                  <Label>What are you passionate about?</Label>
+                  <Label>Your name</Label>
+                  <Input value={fullName} onChange={(e) => setFullName(e.target.value)}
+                    placeholder="Enter your full name" />
+                </div>
+                <div className="grid gap-2">
+                  <Label>What are you passionate about? (optional)</Label>
                   <Textarea value={passion} onChange={(e) => setPassion(e.target.value)}
                     placeholder="I'm passionate about building products that make people's lives easier..." />
                 </div>
                 <div className="grid gap-2">
-                  <Label>What does the world need that you can offer?</Label>
+                  <Label>What does the world need that you can offer? (optional)</Label>
                   <Textarea value={mission} onChange={(e) => setMission(e.target.value)}
                     placeholder="The world needs more accessible technology..." />
                 </div>
                 <div className="grid gap-2">
-                  <Label>What can you be paid for?</Label>
+                  <Label>What can you be paid for? (optional)</Label>
                   <Textarea value={vocation} onChange={(e) => setVocation(e.target.value)}
                     placeholder="I can be paid for software engineering and consulting..." />
                 </div>
                 <div className="grid gap-2">
-                  <Label>What are you great at?</Label>
+                  <Label>What are you great at? (optional)</Label>
                   <Textarea value={profession} onChange={(e) => setProfession(e.target.value)}
                     placeholder="I excel at full-stack development and system design..." />
                 </div>
@@ -240,19 +248,19 @@ export default function OnboardingPage() {
             {step === 2 && (
               <div className="space-y-5">
                 <div className="grid gap-2">
-                  <Label>Skills</Label>
+                  <Label>Skills (optional)</Label>
                   <TagInput tags={skills} setTags={setSkills} placeholder="Add a skill..." suggestions={SKILL_SUGGESTIONS} />
                 </div>
                 <div className="grid gap-2">
-                  <Label>Interests</Label>
+                  <Label>Interests (optional)</Label>
                   <TagInput tags={interests} setTags={setInterests} placeholder="Add an interest..." />
                 </div>
                 <div className="grid gap-2">
-                  <Label>Availability</Label>
+                  <Label>Availability (optional)</Label>
                   <PillSelect options={['Full-time', 'Part-time', 'Weekends only']} value={availability} onChange={setAvailability} />
                 </div>
                 <div className="grid gap-2">
-                  <Label>Working style</Label>
+                  <Label>Working style (optional)</Label>
                   <PillSelect options={['Remote', 'Hybrid', 'In-person']} value={workingStyle} onChange={setWorkingStyle} />
                 </div>
               </div>
@@ -261,7 +269,7 @@ export default function OnboardingPage() {
             {step === 3 && (
               <div className="space-y-5">
                 <div className="grid gap-2">
-                  <Label>I am looking for...</Label>
+                  <Label>I am looking for... (optional)</Label>
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                     {['Cofounder', 'Teammate', 'Client'].map(type => (
                       <button key={type} type="button" onClick={() => toggleIntent(type)}
@@ -279,7 +287,7 @@ export default function OnboardingPage() {
                   </div>
                 </div>
                 <div className="grid gap-2">
-                  <Label>Short bio</Label>
+                  <Label>Short bio (optional)</Label>
                   <Textarea value={bio} onChange={(e) => setBio(e.target.value)}
                     placeholder="Tell people a bit about yourself..."
                     className="min-h-[100px]" />
@@ -290,17 +298,17 @@ export default function OnboardingPage() {
             {step === 4 && (
               <div className="space-y-4">
                 <div className="grid gap-2">
-                  <Label>Portfolio URL</Label>
+                  <Label>Portfolio URL (optional)</Label>
                   <Input value={portfolioUrl} onChange={(e) => setPortfolioUrl(e.target.value)}
                     placeholder="https://yourportfolio.com" />
                 </div>
                 <div className="grid gap-2">
-                  <Label>GitHub URL</Label>
+                  <Label>GitHub URL (optional)</Label>
                   <Input value={githubUrl} onChange={(e) => setGithubUrl(e.target.value)}
                     placeholder="https://github.com/username" />
                 </div>
                 <div className="grid gap-2">
-                  <Label>LinkedIn URL</Label>
+                  <Label>LinkedIn URL (optional)</Label>
                   <Input value={linkedinUrl} onChange={(e) => setLinkedinUrl(e.target.value)}
                     placeholder="https://linkedin.com/in/username" />
                 </div>
