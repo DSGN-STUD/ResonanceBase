@@ -1,16 +1,7 @@
-import { generateText } from 'ai'
-
 export async function POST(req: Request) {
-  console.log('[v0] Match API called')
-  
   const { query, myProfile, candidates } = await req.json()
-  
-  console.log('[v0] Query:', query)
-  console.log('[v0] MyProfile exists:', !!myProfile)
-  console.log('[v0] Candidates count:', candidates?.length ?? 0)
 
   if (!candidates || candidates.length === 0) {
-    console.log('[v0] No candidates provided')
     return Response.json([])
   }
 
@@ -47,21 +38,34 @@ Candidates: ${JSON.stringify(candidates.map((c: Record<string, unknown>) => ({
     working_style: c.working_style,
   })))}`
 
-  console.log('[v0] Calling OpenAI...')
-  
   try {
-    const { text } = await generateText({
-      model: 'openai/gpt-4o-mini',
-      system: systemPrompt,
-      prompt: userMessage,
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userMessage }
+        ],
+        temperature: 0.7
+      })
     })
 
-    console.log('[v0] OpenAI response length:', text.length)
-    console.log('[v0] OpenAI raw response:', text.substring(0, 500))
+    if (!response.ok) {
+      const errorData = await response.text()
+      console.error('OpenAI API error:', errorData)
+      return Response.json({ error: `OpenAI API error: ${response.status}` }, { status: 500 })
+    }
+
+    const data = await response.json()
+    const text = data.choices?.[0]?.message?.content || ''
 
     // Parse JSON from the response - handle markdown code blocks
     let jsonText = text
-    // Remove markdown code blocks if present
     const codeBlockMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/)
     if (codeBlockMatch) {
       jsonText = codeBlockMatch[1].trim()
@@ -71,14 +75,12 @@ Candidates: ${JSON.stringify(candidates.map((c: Record<string, unknown>) => ({
     const jsonMatch = jsonText.match(/\[[\s\S]*\]/)
     if (jsonMatch) {
       const parsed = JSON.parse(jsonMatch[0])
-      console.log('[v0] Parsed matches count:', parsed.length)
       return Response.json(parsed)
     }
     
-    console.log('[v0] No JSON array found in response')
     return Response.json([])
   } catch (error) {
-    console.error('[v0] Error in match API:', error)
+    console.error('Error in match API:', error)
     return Response.json({ error: String(error) }, { status: 500 })
   }
 }

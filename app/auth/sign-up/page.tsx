@@ -42,12 +42,22 @@ export default function SignUpPage() {
       })
       if (error) throw error
       
-      // If session exists (email confirmation disabled), go directly to onboarding
-      if (data.session) {
-        router.push('/onboarding')
+      // If session exists (email confirmation disabled), check profile and redirect
+      if (data.session && data.user) {
+        // Check if profile already has full_name filled in
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', data.user.id)
+          .single()
+
+        if (profile?.full_name) {
+          router.push('/dashboard')
+        } else {
+          router.push('/onboarding')
+        }
       } else {
         // No session means email confirmation is required
-        // Show the success page telling user to check email
         router.push('/auth/sign-up-success')
       }
     } catch (err: unknown) {
