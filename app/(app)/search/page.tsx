@@ -99,8 +99,18 @@ export default function SearchPage() {
         throw new Error('AI matching failed')
       }
 
-      const matchResults: MatchResult[] = await res.json()
-      console.log('[v0] Match results received:', matchResults.length, matchResults)
+      const responseData = await res.json()
+      console.log('[v0] Match results received:', responseData)
+      
+      // Check if response is an error
+      if (responseData.error) {
+        console.error('[v0] API returned error:', responseData.error)
+        toast.error(`AI Error: ${responseData.error}`)
+        setSearching(false)
+        return
+      }
+      
+      const matchResults: MatchResult[] = Array.isArray(responseData) ? responseData : []
 
       // Enrich with profile data
       const enriched = matchResults.map(m => {
@@ -119,8 +129,9 @@ export default function SearchPage() {
       const matchInserts = enriched.map(m => ({
         user_id: user.id,
         matched_user_id: m.userId,
-        score: m.score,
-        reason: m.explanation,
+        match_score: m.score,
+        match_type: m.matchType,
+        ai_explanation: m.explanation,
       }))
 
       if (matchInserts.length > 0) {
@@ -142,9 +153,9 @@ export default function SearchPage() {
       const supabase = createClient()
       const { error } = await supabase.from('connections').upsert({
         requester_id: user.id,
-        addressee_id: matchedUserId,
+        receiver_id: matchedUserId,
         status: 'pending',
-      }, { onConflict: 'requester_id,addressee_id' })
+      }, { onConflict: 'requester_id,receiver_id' })
 
       if (error) throw error
       toast.success('Connection request sent!')

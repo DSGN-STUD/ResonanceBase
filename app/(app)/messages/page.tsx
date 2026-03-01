@@ -45,8 +45,8 @@ export default function MessagesPage() {
 
     // Get all accepted connections
     const { data: connections } = await supabase.from('connections')
-      .select('requester_id, addressee_id')
-      .or(`requester_id.eq.${user.id},addressee_id.eq.${user.id}`)
+      .select('requester_id, receiver_id')
+      .or(`requester_id.eq.${user.id},receiver_id.eq.${user.id}`)
       .eq('status', 'accepted')
 
     if (!connections || connections.length === 0) {
@@ -55,7 +55,7 @@ export default function MessagesPage() {
     }
 
     const contactIds = connections.map(c =>
-      c.requester_id === user.id ? c.addressee_id : c.requester_id
+      c.requester_id === user.id ? c.receiver_id : c.requester_id
     )
 
     const { data: profiles } = await supabase.from('profiles')

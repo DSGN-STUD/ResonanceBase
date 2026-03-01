@@ -18,8 +18,8 @@ type Profile = {
 type Match = {
   id: string
   matched_user_id: string
-  score: number
-  reason: string | null
+  match_score: number
+  ai_explanation: string | null
   profiles: Profile | null
 }
 
@@ -47,9 +47,9 @@ export default function DashboardPage() {
       const [profileRes, matchesCountRes, pendingRes, unreadRes, matchesRes, messagesRes] = await Promise.all([
         supabase.from('profiles').select('full_name').eq('id', user!.id).single(),
         supabase.from('matches').select('id', { count: 'exact', head: true }).eq('user_id', user!.id),
-        supabase.from('connections').select('id', { count: 'exact', head: true }).eq('addressee_id', user!.id).eq('status', 'pending'),
+        supabase.from('connections').select('id', { count: 'exact', head: true }).eq('receiver_id', user!.id).eq('status', 'pending'),
         supabase.from('messages').select('id', { count: 'exact', head: true }).eq('receiver_id', user!.id).eq('read', false),
-        supabase.from('matches').select('id, matched_user_id, score, reason, profiles:profiles!matches_matched_user_id_fkey(full_name, avatar_url)').eq('user_id', user!.id).order('score', { ascending: false }).limit(3),
+        supabase.from('matches').select('id, matched_user_id, match_score, ai_explanation, profiles:profiles!matches_matched_user_id_fkey(full_name, avatar_url)').eq('user_id', user!.id).order('match_score', { ascending: false }).limit(3),
         supabase.from('messages').select('id, sender_id, content, created_at, profiles:profiles!messages_sender_id_fkey(full_name, avatar_url)').eq('receiver_id', user!.id).order('created_at', { ascending: false }).limit(3),
       ])
 
@@ -157,11 +157,11 @@ export default function DashboardPage() {
                 {recentMatches.map(match => (
                   <div key={match.id} className="flex items-center gap-3 rounded-lg bg-secondary/50 p-3">
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/20 text-sm font-bold text-primary">
-                      {match.score}
+                      {match.match_score}
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-medium">{match.profiles?.full_name || 'Unknown'}</p>
-                      <p className="truncate text-xs text-muted-foreground">{match.reason}</p>
+                      <p className="truncate text-xs text-muted-foreground">{match.ai_explanation}</p>
                     </div>
                   </div>
                 ))}

@@ -15,7 +15,7 @@ import { toast } from 'sonner'
 type Connection = {
   id: string
   requester_id: string
-  addressee_id: string
+  receiver_id: string
   status: string
   created_at: string
   profile: { full_name: string | null; avatar_url: string | null } | null
@@ -34,12 +34,12 @@ export default function ConnectionsPage() {
 
     const [pendingRes, acceptedReqRes, acceptedAddrRes, sentRes] = await Promise.all([
       supabase.from('connections').select('*, profile:profiles!connections_requester_id_fkey(full_name, avatar_url)')
-        .eq('addressee_id', user.id).eq('status', 'pending'),
-      supabase.from('connections').select('*, profile:profiles!connections_addressee_id_fkey(full_name, avatar_url)')
+        .eq('receiver_id', user.id).eq('status', 'pending'),
+      supabase.from('connections').select('*, profile:profiles!connections_receiver_id_fkey(full_name, avatar_url)')
         .eq('requester_id', user.id).eq('status', 'accepted'),
       supabase.from('connections').select('*, profile:profiles!connections_requester_id_fkey(full_name, avatar_url)')
-        .eq('addressee_id', user.id).eq('status', 'accepted'),
-      supabase.from('connections').select('*, profile:profiles!connections_addressee_id_fkey(full_name, avatar_url)')
+        .eq('receiver_id', user.id).eq('status', 'accepted'),
+      supabase.from('connections').select('*, profile:profiles!connections_receiver_id_fkey(full_name, avatar_url)')
         .eq('requester_id', user.id).eq('status', 'pending'),
     ])
 

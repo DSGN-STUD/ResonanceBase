@@ -1,4 +1,4 @@
-import { streamText } from 'ai'
+import { generateText } from 'ai'
 
 export async function POST(req: Request) {
   console.log('[v0] Match API called')
@@ -8,6 +8,11 @@ export async function POST(req: Request) {
   console.log('[v0] Query:', query)
   console.log('[v0] MyProfile exists:', !!myProfile)
   console.log('[v0] Candidates count:', candidates?.length ?? 0)
+
+  if (!candidates || candidates.length === 0) {
+    console.log('[v0] No candidates provided')
+    return Response.json([])
+  }
 
   const systemPrompt = `You are a world-class professional matchmaker with deep understanding of startup dynamics and Ikigai philosophy.
 
@@ -19,7 +24,7 @@ Given the searcher's complete profile and their natural language query, evaluate
 
 For each match write a 2-sentence explanation referencing specific details from both profiles. Sound like a smart friend making an introduction.
 
-Return ONLY valid JSON array, no other text:
+Return ONLY valid JSON array, no markdown, no code blocks, no other text:
 [{"userId": "uuid", "score": number, "matchType": "Cofounder"|"Teammate"|"Client", "explanation": "string"}]
 Rank by score descending. Only include scores above 40.`
 
@@ -42,31 +47,34 @@ Candidates: ${JSON.stringify(candidates.map((c: Record<string, unknown>) => ({
     working_style: c.working_style,
   })))}`
 
-  console.log('[v0] Calling OpenAI with model: openai/gpt-4o-mini')
+  console.log('[v0] Calling OpenAI...')
   
   try {
-    const result = streamText({
+    const { text } = await generateText({
       model: 'openai/gpt-4o-mini',
       system: systemPrompt,
       prompt: userMessage,
     })
 
-    // Collect the full text response
-    let fullText = ''
-    for await (const chunk of result.textStream) {
-      fullText += chunk
+    console.log('[v0] OpenAI response length:', text.length)
+    console.log('[v0] OpenAI raw response:', text.substring(0, 500))
+
+    // Parse JSON from the response - handle markdown code blocks
+    let jsonText = text
+    // Remove markdown code blocks if present
+    const codeBlockMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/)
+    if (codeBlockMatch) {
+      jsonText = codeBlockMatch[1].trim()
     }
-
-    console.log('[v0] OpenAI response length:', fullText.length)
-    console.log('[v0] OpenAI response preview:', fullText.substring(0, 200))
-
-    // Parse JSON from the response
-    const jsonMatch = fullText.match(/\[[\s\S]*\]/)
+    
+    // Try to extract JSON array
+    const jsonMatch = jsonText.match(/\[[\s\S]*\]/)
     if (jsonMatch) {
       const parsed = JSON.parse(jsonMatch[0])
       console.log('[v0] Parsed matches count:', parsed.length)
       return Response.json(parsed)
     }
+    
     console.log('[v0] No JSON array found in response')
     return Response.json([])
   } catch (error) {
