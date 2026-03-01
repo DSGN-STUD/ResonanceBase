@@ -52,26 +52,33 @@ export default function SearchPage() {
 
     try {
       const supabase = createClient()
+      console.log('[v0] Search started for user:', user.id)
 
       // Fetch current user profile
-      const { data: myProfile } = await supabase
+      const { data: myProfile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
         .single()
 
+      console.log('[v0] My profile fetched:', !!myProfile, 'Error:', profileError?.message)
+
       // Fetch all public profiles except current user
-      const { data: candidates } = await supabase
+      const { data: candidates, error: candidatesError } = await supabase
         .from('profiles')
         .select('*')
         .eq('is_public', true)
         .neq('id', user.id)
+
+      console.log('[v0] Candidates fetched:', candidates?.length ?? 0, 'Error:', candidatesError?.message)
 
       if (!candidates || candidates.length === 0) {
         toast.info('No profiles found yet. Be the first to complete your profile!')
         setSearching(false)
         return
       }
+
+      console.log('[v0] Calling /api/match with', candidates.length, 'candidates')
 
       // Call AI API route
       const res = await fetch('/api/match', {
@@ -84,9 +91,16 @@ export default function SearchPage() {
         }),
       })
 
-      if (!res.ok) throw new Error('AI matching failed')
+      console.log('[v0] API response status:', res.status)
+
+      if (!res.ok) {
+        const errorText = await res.text()
+        console.error('[v0] API error response:', errorText)
+        throw new Error('AI matching failed')
+      }
 
       const matchResults: MatchResult[] = await res.json()
+      console.log('[v0] Match results received:', matchResults.length, matchResults)
 
       // Enrich with profile data
       const enriched = matchResults.map(m => {
