@@ -133,16 +133,16 @@ export default function LandingPage() {
       </header>
 
       {/* Hero */}
-      <section className="mx-auto max-w-4xl px-6 py-24 text-center lg:py-32">
-        <h1 className="text-4xl font-bold leading-tight text-balance sm:text-5xl lg:text-6xl">
+      <section className="mx-auto max-w-3xl px-6 pt-24 pb-16 text-center">
+        <h1 className="text-5xl font-bold leading-tight text-balance mb-4">
           Your next cofounder is already out there.
           <br />
           <span className="text-primary">Resonate finds them.</span>
         </h1>
-        <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground text-pretty">
+        <p className="mx-auto max-w-2xl text-xl text-muted-foreground text-pretty mb-8">
           Most partnerships fail before they start — not because of bad skills, but because of misaligned purpose. Resonate matches you on what actually matters: your Ikigai.
         </p>
-        <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
+        <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
           <Button size="lg" asChild className="ai-glow">
             <Link href="/auth/sign-up">Find Your Match</Link>
           </Button>
@@ -153,7 +153,7 @@ export default function LandingPage() {
       </section>
 
       {/* Value Props */}
-      <section id="features" className="mx-auto max-w-5xl px-6 py-16">
+      <section id="features" className="mx-auto max-w-5xl px-6 mt-24">
         <div className="grid gap-6 md:grid-cols-3">
           <Card className="border-border/50 bg-card/50 backdrop-blur">
             <CardContent className="p-6">
@@ -192,8 +192,9 @@ export default function LandingPage() {
       </section>
 
       {/* How It Works */}
-      <section id="how-it-works" className="mx-auto max-w-4xl px-6 py-16">
-        <h2 className="mb-12 text-center text-3xl font-bold">How it works</h2>
+      <section id="how-it-works" className="mx-auto max-w-5xl px-6 mt-24">
+        <h2 className="mb-2 text-center text-3xl font-bold">How it works</h2>
+        <p className="text-center text-muted-foreground mb-6">Four steps to finding your people</p>
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {[
             { step: '1', title: 'Discover your Ikigai', desc: 'Answer guided questions about your passion, mission, vocation, and profession.' },
@@ -213,9 +214,9 @@ export default function LandingPage() {
       </section>
 
       {/* Vision Teaser */}
-      <section id="vision" className="mx-auto max-w-5xl px-6 py-16">
-        <h2 className="mb-4 text-center text-3xl font-bold">We're just getting started</h2>
-        <p className="mx-auto mb-12 max-w-2xl text-center text-muted-foreground">
+      <section id="vision" className="mx-auto max-w-5xl px-6 mt-24">
+        <h2 className="mb-2 text-center text-3xl font-bold">We're just getting started</h2>
+        <p className="mx-auto mb-6 max-w-2xl text-center text-muted-foreground">
           Resonate is building the infrastructure for purpose-driven professional relationships.
         </p>
         <div className="grid gap-6 md:grid-cols-3">
@@ -264,7 +265,7 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border px-6 py-8">
+      <footer className="border-t border-border px-6 py-8 mt-24">
         <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-4 sm:flex-row">
           <div className="flex items-center gap-2">
             <span className="text-sm font-semibold">Resonate</span>

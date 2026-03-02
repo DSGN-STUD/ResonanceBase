@@ -37,7 +37,18 @@ export default function MessagesPage() {
   const [newMessage, setNewMessage] = useState('')
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState(false)
+  const [icebreakers, setIcebreakers] = useState<string[]>([])
+  const [loadingIcebreakers, setLoadingIcebreakers] = useState(false)
+  const [myProfile, setMyProfile] = useState<{ full_name: string | null; ikigai_passion: string | null } | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  // Load current user profile
+  useEffect(() => {
+    if (!user) return
+    const supabase = createClient()
+    supabase.from('profiles').select('full_name, ikigai_passion').eq('id', user.id).single()
+      .then(({ data }) => setMyProfile(data))
+  }, [user])
 
   const loadContacts = useCallback(async () => {
     if (!user) return
@@ -99,8 +110,52 @@ export default function MessagesPage() {
   useEffect(() => {
     if (selectedContact) {
       loadMessages(selectedContact.id)
+      setIcebreakers([]) // Clear icebreakers when changing contacts
     }
   }, [selectedContact, loadMessages])
+
+  // Fetch icebreakers when conversation is empty
+  const fetchIcebreakers = async () => {
+    if (!selectedContact || !myProfile || messages.length > 0) return
+    
+    setLoadingIcebreakers(true)
+    try {
+      // Get receiver's profile for passion
+      const supabase = createClient()
+      const { data: receiverProfile } = await supabase
+        .from('profiles')
+        .select('ikigai_passion')
+        .eq('id', selectedContact.id)
+        .single()
+      
+      const res = await fetch('/api/icebreaker', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          senderName: myProfile.full_name || 'User',
+          receiverName: selectedContact.full_name || 'User',
+          senderPassion: myProfile.ikigai_passion || '',
+          receiverPassion: receiverProfile?.ikigai_passion || ''
+        })
+      })
+      
+      const data = await res.json()
+      if (Array.isArray(data.icebreakers)) {
+        setIcebreakers(data.icebreakers)
+      }
+    } catch {
+      // Silently fail
+    } finally {
+      setLoadingIcebreakers(false)
+    }
+  }
+
+  // Auto-fetch icebreakers when messages are loaded and empty
+  useEffect(() => {
+    if (selectedContact && messages.length === 0 && icebreakers.length === 0 && !loadingIcebreakers && myProfile) {
+      fetchIcebreakers()
+    }
+  }, [selectedContact, messages.length, myProfile])
 
   // Realtime subscription
   useEffect(() => {
@@ -166,9 +221,9 @@ export default function MessagesPage() {
 
   if (contacts.length === 0) {
     return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold">Messages</h1>
+      <div className="mx-auto max-w-5xl space-y-8 px-6 py-8">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold mb-2">Messages</h1>
           <p className="text-muted-foreground">Chat with your connections</p>
         </div>
         <Card className="flex flex-col items-center gap-3 p-12 text-center">
@@ -181,9 +236,9 @@ export default function MessagesPage() {
   }
 
   return (
-    <div className="space-y-4">
-      <div>
-        <h1 className="text-2xl font-bold">Messages</h1>
+    <div className="mx-auto max-w-5xl space-y-8 px-6 py-8">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold mb-2">Messages</h1>
         <p className="text-muted-foreground">Chat with your connections</p>
       </div>
 
@@ -191,7 +246,7 @@ export default function MessagesPage() {
         {/* Contact list */}
         <Card className="w-72 shrink-0 overflow-hidden">
           <ScrollArea className="h-full">
-            <div className="space-y-1 p-2">
+            <div className="space-y-1 p-4">
               {contacts.map(contact => (
                 <button key={contact.id} onClick={() => setSelectedContact(contact)}
                   className={cn(
@@ -223,7 +278,7 @@ export default function MessagesPage() {
                 {messages.map(msg => (
                   <div key={msg.id} className={cn('flex', msg.sender_id === user?.id ? 'justify-end' : 'justify-start')}>
                     <div className={cn(
-                      'max-w-[70%] rounded-2xl px-4 py-2 text-sm',
+                      'max-w-xs rounded-2xl px-4 py-2 text-sm',
                       msg.sender_id === user?.id
                         ? 'bg-primary text-primary-foreground'
                         : 'bg-secondary text-secondary-foreground'
@@ -235,7 +290,24 @@ export default function MessagesPage() {
                 <div ref={messagesEndRef} />
               </div>
             </ScrollArea>
-            <form onSubmit={handleSend} className="flex gap-2 border-t border-border p-4">
+            {/* Icebreaker prompts - show only when conversation is empty */}
+            {messages.length === 0 && icebreakers.length > 0 && (
+              <div className="border-t border-border p-4">
+                <p className="text-xs text-muted-foreground mb-2">Conversation starters</p>
+                <div className="flex flex-wrap gap-2">
+                  {icebreakers.map((prompt, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setNewMessage(prompt)}
+                      className="rounded-full bg-secondary px-3 py-1.5 text-sm text-secondary-foreground hover:bg-secondary/80 transition-colors"
+                    >
+                      {prompt}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            <form onSubmit={handleSend} className="flex gap-3 border-t border-border p-4">
               <Input
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
