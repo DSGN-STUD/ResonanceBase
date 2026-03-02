@@ -103,6 +103,24 @@ export default function ConnectionsPage() {
     toast.success('Request withdrawn')
   }
 
+  const removeConnection = async (connectionId: string) => {
+    if (!user) return
+    const supabase = createClient()
+    const { error } = await supabase
+      .from('connections')
+      .delete()
+      .eq('id', connectionId)
+    
+    if (error) {
+      toast.error('Failed to remove connection')
+      return
+    }
+    
+    // Remove from UI immediately
+    setAccepted(prev => prev.filter(c => c.id !== connectionId))
+    toast.success('Connection removed')
+  }
+
   return (
     <div className="mx-auto max-w-5xl space-y-8 px-6 py-8">
       <div className="mb-6">
@@ -168,6 +186,14 @@ export default function ConnectionsPage() {
                     <Link href="/messages">
                       <MessageSquare className="h-3.5 w-3.5" /> Message
                     </Link>
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => removeConnection(conn.id)}
+                    className="text-muted-foreground hover:text-red-500"
+                  >
+                    Remove
                   </Button>
                 </CardContent>
               </Card>
