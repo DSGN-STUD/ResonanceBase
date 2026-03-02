@@ -238,6 +238,7 @@ export default function SearchPage() {
         requester_id: user.id,
         receiver_id: matchedUserId,
         status: 'pending',
+        intro_message: message || null,
       })
 
       if (error) {

@@ -11,6 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Heart, Target, Briefcase, Star, ExternalLink, UserPlus, MessageSquare } from 'lucide-react'
 import { toast } from 'sonner'
 import Link from 'next/link'
+import { IntroMessageModal } from '@/components/intro-message-modal'
 
 type Profile = {
   id: string
@@ -40,6 +41,8 @@ export default function ProfileViewPage() {
   const [loading, setLoading] = useState(true)
   const [connectionStatus, setConnectionStatus] = useState<string | null>(null)
   const [connecting, setConnecting] = useState(false)
+  const [introModalOpen, setIntroModalOpen] = useState(false)
+  const [myProfile, setMyProfile] = useState<{ full_name: string | null; ikigai_passion: string | null; skills: string[] | null } | null>(null)
 
   useEffect(() => {
     const supabase = createClient()
@@ -49,12 +52,16 @@ export default function ProfileViewPage() {
       setProfile(data as Profile | null)
 
       if (user && user.id !== id) {
-        const { data: conn } = await supabase.from('connections').select('status')
-          .or(`and(requester_id.eq.${user.id},receiver_id.eq.${id}),and(requester_id.eq.${id},receiver_id.eq.${user.id})`)
-          .limit(1)
-          .single()
+        const [connRes, myProfileRes] = await Promise.all([
+          supabase.from('connections').select('status')
+            .or(`and(requester_id.eq.${user.id},receiver_id.eq.${id}),and(requester_id.eq.${id},receiver_id.eq.${user.id})`)
+            .limit(1)
+            .single(),
+          supabase.from('profiles').select('full_name, ikigai_passion, skills').eq('id', user.id).single()
+        ])
 
-        setConnectionStatus(conn?.status ?? null)
+        setConnectionStatus(connRes.data?.status ?? null)
+        setMyProfile(myProfileRes.data)
       }
       setLoading(false)
     }
@@ -62,7 +69,7 @@ export default function ProfileViewPage() {
     load()
   }, [id, user])
 
-  const handleConnect = async () => {
+  const handleConnect = async (introMessage?: string) => {
     if (!user) return
     setConnecting(true)
     try {
@@ -71,6 +78,7 @@ export default function ProfileViewPage() {
         requester_id: user.id,
         receiver_id: id,
         status: 'pending',
+        intro_message: introMessage || null,
       })
       
       if (error) {
@@ -92,6 +100,10 @@ export default function ProfileViewPage() {
     } finally {
       setConnecting(false)
     }
+  }
+
+  const openIntroModal = () => {
+    setIntroModalOpen(true)
   }
 
   if (loading) {
@@ -133,7 +145,7 @@ export default function ProfileViewPage() {
             ) : connectionStatus === 'pending' ? (
               <Button disabled variant="outline">Request pending</Button>
             ) : (
-              <Button onClick={handleConnect} disabled={connecting} className="gap-2">
+              <Button onClick={openIntroModal} disabled={connecting} className="gap-2 ai-glow">
                 <UserPlus className="h-4 w-4" />
                 {connecting ? 'Sending...' : 'Connect'}
               </Button>
@@ -220,6 +232,25 @@ export default function ProfileViewPage() {
           </CardContent>
         </Card>
       )}
+
+      <IntroMessageModal
+        open={introModalOpen}
+        onOpenChange={setIntroModalOpen}
+        senderProfile={myProfile}
+        receiverProfile={profile ? {
+          full_name: profile.full_name,
+          ikigai_passion: profile.ikigai_passion,
+          skills: profile.skills
+        } : null}
+        onSend={(message) => {
+          handleConnect(message)
+          setIntroModalOpen(false)
+        }}
+        onSkip={() => {
+          handleConnect()
+          setIntroModalOpen(false)
+        }}
+      />
     </div>
   )
 }

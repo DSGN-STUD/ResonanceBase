@@ -18,6 +18,7 @@ type Connection = {
   receiver_id: string
   status: string
   created_at: string
+  intro_message: string | null
   profile: { full_name: string | null; avatar_url: string | null } | null
 }
 
@@ -33,7 +34,7 @@ export default function ConnectionsPage() {
     const supabase = createClient()
 
     const [pendingRes, acceptedReqRes, acceptedAddrRes, sentRes] = await Promise.all([
-      supabase.from('connections').select('*, profile:profiles!connections_requester_id_fkey(full_name, avatar_url)')
+      supabase.from('connections').select('*, intro_message, profile:profiles!connections_requester_id_fkey(full_name, avatar_url)')
         .eq('receiver_id', user.id).eq('status', 'pending'),
       supabase.from('connections').select('*, profile:profiles!connections_receiver_id_fkey(full_name, avatar_url)')
         .eq('requester_id', user.id).eq('status', 'accepted'),
@@ -56,6 +57,27 @@ export default function ConnectionsPage() {
   useEffect(() => {
     loadConnections()
   }, [loadConnections])
+
+  // Real-time subscription for connections changes
+  useEffect(() => {
+    if (!user) return
+    const supabase = createClient()
+    
+    const channel = supabase
+      .channel('connections-changes')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'connections'
+      }, () => {
+        loadConnections()
+      })
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [user, loadConnections])
 
   const handleAccept = async (connId: string) => {
     const supabase = createClient()
@@ -150,6 +172,9 @@ export default function ConnectionsPage() {
                   <div className="min-w-0 flex-1">
                     <p className="font-medium">{conn.profile?.full_name || 'Unknown'}</p>
                     <p className="text-xs text-muted-foreground">Wants to connect</p>
+                    {conn.intro_message && (
+                      <p className="text-sm text-muted-foreground mt-1 italic">"{conn.intro_message}"</p>
+                    )}
                   </div>
                   <div className="flex gap-3">
                     <Button size="sm" onClick={() => handleAccept(conn.id)} className="gap-1.5">
