@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/lib/auth-context'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -40,33 +40,59 @@ export default function DashboardPage() {
   const [recentMessages, setRecentMessages] = useState<Message[]>([])
   const [loading, setLoading] = useState(true)
 
+  const loadDashboard = useCallback(async () => {
+    if (!user) return
+    const supabase = createClient()
+
+    const [profileRes, matchesCountRes, pendingRes, unreadRes, matchesRes, messagesRes] = await Promise.all([
+      supabase.from('profiles').select('full_name').eq('id', user.id).single(),
+      supabase.from('matches').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
+      supabase.from('connections').select('id', { count: 'exact', head: true }).eq('receiver_id', user.id).eq('status', 'pending'),
+      supabase.from('messages').select('id', { count: 'exact', head: true }).eq('receiver_id', user.id).eq('read', false),
+      supabase.from('matches').select('id, matched_user_id, match_score, match_type, ai_explanation, profiles:profiles!matches_matched_user_id_fkey(full_name, avatar_url)').eq('user_id', user.id).order('created_at', { ascending: false }).limit(3),
+      supabase.from('messages').select('id, sender_id, content, created_at, profiles:profiles!messages_sender_id_fkey(full_name, avatar_url)').eq('receiver_id', user.id).order('created_at', { ascending: false }).limit(3),
+    ])
+
+    setProfile(profileRes.data)
+    setStats({
+      matches: matchesCountRes.count ?? 0,
+      pending: pendingRes.count ?? 0,
+      unread: unreadRes.count ?? 0,
+    })
+    setRecentMatches((matchesRes.data as unknown as Match[]) ?? [])
+    setRecentMessages((messagesRes.data as unknown as Message[]) ?? [])
+    setLoading(false)
+  }, [user])
+
+  useEffect(() => {
+    loadDashboard()
+  }, [loadDashboard])
+
+  // Real-time subscription for connections changes
   useEffect(() => {
     if (!user) return
     const supabase = createClient()
 
-    async function loadDashboard() {
-      const [profileRes, matchesCountRes, pendingRes, unreadRes, matchesRes, messagesRes] = await Promise.all([
-        supabase.from('profiles').select('full_name').eq('id', user!.id).single(),
-        supabase.from('matches').select('*', { count: 'exact', head: true }).eq('user_id', user!.id),
-        supabase.from('connections').select('id', { count: 'exact', head: true }).eq('receiver_id', user!.id).eq('status', 'pending'),
-        supabase.from('messages').select('id', { count: 'exact', head: true }).eq('receiver_id', user!.id).eq('read', false),
-        supabase.from('matches').select('id, matched_user_id, match_score, match_type, ai_explanation, profiles:profiles!matches_matched_user_id_fkey(full_name, avatar_url)').eq('user_id', user!.id).order('created_at', { ascending: false }).limit(3),
-        supabase.from('messages').select('id, sender_id, content, created_at, profiles:profiles!messages_sender_id_fkey(full_name, avatar_url)').eq('receiver_id', user!.id).order('created_at', { ascending: false }).limit(3),
-      ])
-
-      setProfile(profileRes.data)
-      setStats({
-        matches: matchesCountRes.count ?? 0,
-        pending: pendingRes.count ?? 0,
-        unread: unreadRes.count ?? 0,
+    const channel = supabase
+      .channel('dashboard-connections')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'connections'
+      }, () => {
+        loadDashboard()
       })
-      setRecentMatches((matchesRes.data as unknown as Match[]) ?? [])
-      setRecentMessages((messagesRes.data as unknown as Message[]) ?? [])
-      setLoading(false)
-    }
+      .subscribe()
 
-    loadDashboard()
-  }, [user])
+    // Re-fetch when page gains focus
+    const handleFocus = () => loadDashboard()
+    window.addEventListener('focus', handleFocus)
+
+    return () => {
+      supabase.removeChannel(channel)
+      window.removeEventListener('focus', handleFocus)
+    }
+  }, [user, loadDashboard])
 
   if (authLoading || loading) {
     return (
