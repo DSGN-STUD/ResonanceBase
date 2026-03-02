@@ -83,14 +83,34 @@ export default function ConnectionsPage() {
     )
   }
 
+  const withdrawConnection = async (connectionId: string) => {
+    if (!user) return
+    const supabase = createClient()
+    const { error } = await supabase
+      .from('connections')
+      .delete()
+      .eq('id', connectionId)
+      .eq('requester_id', user.id)
+      .eq('status', 'pending')
+    
+    if (error) {
+      toast.error('Failed to withdraw request')
+      return
+    }
+    
+    // Remove from UI immediately
+    setSent(prev => prev.filter(c => c.id !== connectionId))
+    toast.success('Request withdrawn')
+  }
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Connections</h1>
+    <div className="mx-auto max-w-5xl space-y-8 px-6 py-8">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold mb-2">Connections</h1>
         <p className="text-muted-foreground">Manage your network</p>
       </div>
 
-      <Tabs defaultValue="pending">
+      <Tabs defaultValue="pending" className="mb-6">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="pending" className="gap-1.5">
             Pending {pending.length > 0 && <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">{pending.length}</Badge>}
@@ -105,7 +125,7 @@ export default function ConnectionsPage() {
           ) : (
             pending.map(conn => (
               <Card key={conn.id}>
-                <CardContent className="flex items-center gap-4 p-4">
+                <CardContent className="flex items-center gap-3 p-6">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/20 font-bold text-primary">
                     {(conn.profile?.full_name || '?')[0]}
                   </div>
@@ -113,7 +133,7 @@ export default function ConnectionsPage() {
                     <p className="font-medium">{conn.profile?.full_name || 'Unknown'}</p>
                     <p className="text-xs text-muted-foreground">Wants to connect</p>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-3">
                     <Button size="sm" onClick={() => handleAccept(conn.id)} className="gap-1.5">
                       <Check className="h-3.5 w-3.5" /> Accept
                     </Button>
@@ -136,7 +156,7 @@ export default function ConnectionsPage() {
           ) : (
             accepted.map(conn => (
               <Card key={conn.id}>
-                <CardContent className="flex items-center gap-4 p-4">
+                <CardContent className="flex items-center gap-3 p-6">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/20 font-bold text-primary">
                     {(conn.profile?.full_name || '?')[0]}
                   </div>
@@ -161,7 +181,7 @@ export default function ConnectionsPage() {
           ) : (
             sent.map(conn => (
               <Card key={conn.id}>
-                <CardContent className="flex items-center gap-4 p-4">
+                <CardContent className="flex items-center gap-3 p-6">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/20 font-bold text-primary">
                     {(conn.profile?.full_name || '?')[0]}
                   </div>
@@ -171,6 +191,14 @@ export default function ConnectionsPage() {
                   <Badge variant="outline" className="gap-1.5">
                     <Clock className="h-3 w-3" /> Pending
                   </Badge>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => withdrawConnection(conn.id)}
+                    className="text-muted-foreground hover:text-destructive"
+                  >
+                    Withdraw
+                  </Button>
                 </CardContent>
               </Card>
             ))
