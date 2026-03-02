@@ -188,20 +188,39 @@ export default function SearchPage() {
     }
   }
 
-  // Track which users we've already sent connection requests to
-  const [connectedUsers, setConnectedUsers] = useState<Set<string>>(new Set())
+  // Track which users we've already sent connection requests to (pending)
+  const [pendingUsers, setPendingUsers] = useState<Set<string>>(new Set())
+  // Track which users we're already connected to (accepted)
+  const [acceptedUsers, setAcceptedUsers] = useState<Set<string>>(new Set())
   
   // Intro message modal state
   const [introModalOpen, setIntroModalOpen] = useState(false)
   const [selectedMatch, setSelectedMatch] = useState<MatchResult | null>(null)
   const [myProfile, setMyProfile] = useState<{ full_name: string | null; ikigai_passion: string | null; skills: string[] | null } | null>(null)
 
-  // Fetch user profile for intro modal
+  // Fetch user profile and existing connections for intro modal
   useEffect(() => {
     if (user) {
       const supabase = createClient()
+      
+      // Fetch profile
       supabase.from('profiles').select('full_name, ikigai_passion, skills').eq('id', user.id).single()
         .then(({ data }) => setMyProfile(data))
+      
+      // Fetch existing connections (both pending and accepted)
+      Promise.all([
+        supabase.from('connections').select('receiver_id').eq('requester_id', user.id).eq('status', 'pending'),
+        supabase.from('connections').select('receiver_id').eq('requester_id', user.id).eq('status', 'accepted'),
+        supabase.from('connections').select('requester_id').eq('receiver_id', user.id).eq('status', 'accepted'),
+      ]).then(([pendingRes, acceptedSentRes, acceptedReceivedRes]) => {
+        const pending = new Set((pendingRes.data || []).map(c => c.receiver_id))
+        const accepted = new Set([
+          ...((acceptedSentRes.data || []).map(c => c.receiver_id)),
+          ...((acceptedReceivedRes.data || []).map(c => c.requester_id)),
+        ])
+        setPendingUsers(pending)
+        setAcceptedUsers(accepted)
+      })
     }
   }, [user])
 
@@ -223,9 +242,9 @@ export default function SearchPage() {
 
       if (error) {
         console.error('Connection error:', error.message)
-        // If it's a duplicate, just mark as connected
+        // If it's a duplicate, just mark as pending
         if (error.code === '23505') {
-          setConnectedUsers(prev => new Set(prev).add(matchedUserId))
+          setPendingUsers(prev => new Set(prev).add(matchedUserId))
           toast.info('Connection request already sent')
           return
         }
@@ -233,7 +252,7 @@ export default function SearchPage() {
       }
       
       // Update UI immediately to show "Pending"
-      setConnectedUsers(prev => new Set(prev).add(matchedUserId))
+      setPendingUsers(prev => new Set(prev).add(matchedUserId))
       toast.success('Connection request sent!')
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to connect')
@@ -332,7 +351,11 @@ export default function SearchPage() {
                       View
                     </Link>
                   </Button>
-                  {connectedUsers.has(match.userId) ? (
+                  {acceptedUsers.has(match.userId) ? (
+                    <Badge variant="secondary" className="text-muted-foreground">
+                      Connected
+                    </Badge>
+                  ) : pendingUsers.has(match.userId) ? (
                     <Button size="sm" variant="outline" disabled className="gap-1.5">
                       Pending
                     </Button>
